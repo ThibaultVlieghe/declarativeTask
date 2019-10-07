@@ -3,7 +3,7 @@ from expyriment.stimuli import Circle
 
 from ld_card import LdCard
 from config import cardSize, linesThickness, cueCardColor, matrixTemplate, listPictures, removeCards, dotColor, bgColor
-from config import picturesFolder
+from config import numberCategories, picturesFolder
 
 
 class LdMatrix(object):
@@ -124,7 +124,7 @@ class LdMatrix(object):
     def findMatrix(self, previousMatrix=None, keep=False):
 
         newMatrix = []
-        perm = np.random.permutation(4)
+        perm = np.random.permutation(numberCategories)
         newClassesPictures = np.asarray(listPictures)[perm]
         newClassesPictures = np.ndarray.tolist(newClassesPictures)
         if previousMatrix is None:   # New Matrix
@@ -140,7 +140,7 @@ class LdMatrix(object):
             newMatrix = previousMatrix
             while np.any(newMatrix == previousMatrix):
                 newMatrix = []
-                perm = np.random.permutation(4)
+                perm = np.random.permutation(numberCategories)
                 newClassesPictures = np.asarray(listPictures)[perm]
                 newClassesPictures = np.ndarray.tolist(newClassesPictures)
                 for itemMatrix in matrixTemplate:

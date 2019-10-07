@@ -122,15 +122,19 @@ arrow1 = (' XX                                                                  
           '                                                                                ',
           '                                                                                ')
 
-if matrixSize == (5,5):
-    matrixTemplate = [2,0,2,1,3,1,3,0,2,0,3,2,0,1,2,1,3,2,3,0,3,1,0,1]
+if matrixSize == (5, 5):
+    matrixTemplate = [2,0,2,1,1,1,1,0,2,0,2,2,0,1,2,1,2,2,0,0,0,1,0,1]
     removeCards = [12]
-elif matrixSize == (6,6):
+elif matrixSize == (6, 6):
     removeCards = []
-    matrixTemplate = [1, 0, 2, 0, 2, 3, 3, 2, 3, 1, 0, 1, 0, 1, 2,
-                        0, 1, 3, 2, 3, 1, 3, 2, 0, 3, 1, 0, 2, 3, 2, 2, 0, 1, 3, 1, 0]
+    matrixTemplate = [0, 1, 1, 2, 0, 2,
+                      2, 0, 0, 2, 1, 1,
+                      1, 0, 2, 1, 2, 0,
+                      0, 2, 1, 0, 1, 2,
+                      1, 2, 1, 2, 0, 1,
+                      0, 1, 0, 2, 2, 0]
 elif matrixSize == (7, 7):
-    removeCards = []
+    removeCards = [24]
     matrixTemplate = [0, 1, 1, 0, 2, 0, 2,
                       2, 0, 0, 1, 2, 1, 1,
                       1, 0, 2, 2, 1, 2, 0,
@@ -143,6 +147,7 @@ elif matrixSize == (7, 7):
 correctAnswersMax = int(ceil((matrixSize[0]*matrixSize[0] - len(removeCards))*7./10))
 
 classPictures = ['a', 'b', 'c']
+numberCategories = len(classPictures)
 
 listPictures = []
 for classPicture in classPictures:
