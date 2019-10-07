@@ -1,5 +1,6 @@
 import numpy as np
-from expyriment.stimuli import Circle
+from expyriment.stimuli import Circle, Rectangle
+from expyriment.misc import constants
 
 from ld_card import LdCard
 from config import cardSize, linesThickness, cueCardColor, matrixTemplate, listPictures, removeCards, dotColor, bgColor
@@ -113,8 +114,11 @@ class LdMatrix(object):
         bs = self.plotCueCard(False, bs)
 
         if (self.size[0] % 2 == 0) and (self.size[1] % 2 == 0):
-            centerDot = Circle(self.gap/2, colour=dotColor, position=(0,0))
+            centerDot = Circle(self.gap/2, colour=dotColor, position=(0, 0))
             centerDot.plot(bs)
+        elif (self.size[0] % 2 == 1) and (self.size[1] % 2 == 1):
+            centerSquare = Rectangle(cardSize, colour=constants.C_WHITE, position=(0, 0))
+            centerSquare.plot(bs)
 
         if draw:
             bs.present(False, True)
