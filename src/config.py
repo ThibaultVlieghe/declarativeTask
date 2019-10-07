@@ -7,6 +7,7 @@ rawFolder = os.getcwd() + os.path.sep
 picturesFolder = rawFolder + 'stimulis' + os.path.sep
 picturesExamplesFolder = rawFolder + 'stimulisExample' + os.path.sep
 dataFolder = rawFolder + 'data' + os.path.sep
+soundsFolder = rawFolder + 'stimulis' + os.path.sep + 'sounds' + os.path.sep
 
 mouseButton = 1
 
@@ -14,6 +15,8 @@ windowMode = False  # if False use FullScreen
 windowSize = (1024, 768)  # if windowMode is True then use windowSize
 
 picturesExamples = ['triangle.png', 'square.png', 'circle.png']
+sounds = ['shortest-1-100ms.wav', 'shortest-2-100ms.wav', 'shortest-3-100ms.wav']
+
 
 templatePicture = picturesFolder+'a001.png'
 

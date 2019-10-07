@@ -1,11 +1,13 @@
 import numpy as np
+from playsound import playsound
+
 from expyriment.stimuli import Circle, Rectangle
 from expyriment.misc import constants
 
 from ld_card import LdCard
 from config import cardSize, linesThickness, cueCardColor, matrixTemplate, listPictures, removeCards, dotColor, bgColor
-from config import numberCategories, picturesFolder
-
+from config import numberCategories, picturesFolder, classPictures
+from config import sounds, soundsFolder
 
 class LdMatrix(object):
     def __init__(self, size, windowSize):
@@ -104,6 +106,12 @@ class LdMatrix(object):
         else:
             return bs
 
+    def playSound(self, nCard):
+        playsound(soundsFolder + sounds[self._matrix.item(nCard).sound])
+
+    def playCueSound(self):
+        playsound(soundsFolder + sounds[self._cueCard.sound])
+
     def plotDefault(self, bs, draw=False):
         for nCard in range(self._matrix.size):
             if nCard in removeCards:
@@ -162,6 +170,17 @@ class LdMatrix(object):
                 self._matrix.item(nCard).setPicture(picturesFolder + newMatrix[nPict], False)
                 self._matrix.item(nCard).stimuli[0].scale(self._matrix.item(nCard).size[0]/float(300))
                 self._listPictures.append(newMatrix[nPict])
+                nPict += 1
+
+    def associateSounds(self, newMatrix, soundsAllocation):
+        nPict = 0
+        for nCard in range(self._matrix.size):
+            if nCard not in removeCards:
+                picture = newMatrix[nPict].rstrip('.png')
+                for i in range(numberCategories):
+                    if classPictures[i] in picture:  # if card belongs to the the i-th category
+                        # associate this category's sound to the card
+                        self._matrix.item(nCard).setSound(soundsAllocation[i])
                 nPict += 1
 
     def checkPosition(self, position):

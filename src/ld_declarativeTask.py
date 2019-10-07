@@ -7,6 +7,7 @@ from expyriment.misc._timer import get_time
 
 from ld_matrix import LdMatrix
 from ld_utils import setCursor, newRandomPresentation, getPreviousMatrix, path_leaf, readMouse
+from ld_utils import getPreviousSoundsAllocation, newSoundAllocation
 from config import *
 
 if not windowMode:  # Check WindowMode and Resolution
@@ -36,29 +37,17 @@ m = LdMatrix(matrixSize, windowSize)  # Create Matrix
 
 if experimentName == 'DayOne-Learning':
     oldListPictures = None
+    keepSoundsAllocation = True
     keepMatrix = True
 elif experimentName == 'DayOne-TestLearning':
     oldListPictures = getPreviousMatrix(subjectName, 0, 'DayOne-Learning')
     keepMatrix = True
+    keepSoundsAllocation = True
     nbBlocksMax = 1
-elif experimentName == 'DayTwo-TestLearning':
-    oldListPictures = getPreviousMatrix(subjectName, 1, 'DayOne-Learning')
+elif experimentName == 'DayOne-TestConsolidation':
+    oldListPictures = getPreviousMatrix(subjectName, 0, 'DayOne-Learning')
     keepMatrix = True
-    nbBlocksMax = 1
-elif experimentName == 'DayTwo-TestInterference':
-    oldListPictures = getPreviousMatrix(subjectName, 0, 'DayTwo-Interference')
-    keepMatrix = True
-    nbBlocksMax = 1
-elif experimentName == 'DayTwo-Interference':
-    oldListPictures = getPreviousMatrix(subjectName, 1, 'DayOne-Learning')
-    keepMatrix = False
-elif experimentName == 'DayThree-TestLearning':
-    oldListPictures = getPreviousMatrix(subjectName, 2, 'DayOne-Learning')
-    keepMatrix = True
-    nbBlocksMax = 1
-elif experimentName == 'DayThree-TestInterference':
-    oldListPictures = getPreviousMatrix(subjectName, 1, 'DayTwo-Interference')
-    keepMatrix = True
+    keepSoundsAllocation = True
     nbBlocksMax = 1
 
 if oldListPictures is False:
@@ -75,6 +64,22 @@ control.initialize(exp)
 m.associatePictures(newMatrix)  # Associate Pictures to cards
 
 exp.add_experiment_info([m.listPictures])  # Add listPictures
+
+previousSoundAllocation = getPreviousSoundsAllocation(subjectName, 0, 'DayOne-Learning')
+
+if not previousSoundAllocation or not keepSoundsAllocation:
+    soundsAllocation = newSoundAllocation(numberCategories)
+else:
+    soundsAllocation = previousSoundAllocation
+
+exp.add_experiment_info(['Image classes order:'])
+exp.add_experiment_info([classPictures])
+exp.add_experiment_info(['Sounds order:'])
+exp.add_experiment_info([sounds])
+exp.add_experiment_info(['Image classes to sounds:'])
+exp.add_experiment_info([soundsAllocation])
+
+m.associateSounds(newMatrix, soundsAllocation)  # Associate Sounds to Cards depending on pictures
 
 control.start(exp, auto_create_subject_id=True, skip_ready_screen=True)
 
@@ -124,6 +129,7 @@ while currentCorrectAnswers < correctAnswersMax and nBlock < nbBlocksMax:
         for nCard in presentationOrder:
             mouse.hide_cursor(True, True)
             m.plotCard(nCard, True, bs, True)  # Show Location for ( 2s )
+            m.playSound(nCard)
             exp.clock.wait(presentationCard)
             m.plotCard(nCard, False, bs, True)
 
@@ -155,8 +161,10 @@ while currentCorrectAnswers < correctAnswersMax and nBlock < nbBlocksMax:
     for nCard in presentationOrder:
 
         m._cueCard.setPicture(m._matrix.item(nCard).stimuli[0].filename)  # Associate Picture to CueCard
+        m._cueCard.setSound(m._matrix.item(nCard).sound)  # Associate Sound to CueCard
 
         m.plotCueCard(True, bs, True)  # Show Cue
+        m.playCueSound()
 
         exp.clock.wait(presentationCard)  # Wait presentationCard
 

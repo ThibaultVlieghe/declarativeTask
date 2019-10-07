@@ -122,6 +122,35 @@ def getPreviousMatrix(subjectName, daysBefore, experienceName):
     return False
 
 
+def getPreviousSoundsAllocation(subjectName, daysBefore, experienceName):
+    # Duplicate of get previous matrix but for sounds
+    currentDate = datetime.now()
+
+    dataFiles = [each for each in os.listdir(dataFolder) if each.endswith('.xpd')]
+
+    for dataFile in dataFiles:
+        agg = misc.data_preprocessing.read_datafile(dataFolder + dataFile, only_header_and_variable_names=True)
+
+        previousDate = parse(agg[2]['date'])
+
+        try:
+            agg[3].index(experienceName)
+        except (ValueError):
+            continue
+
+        if daysBefore == 0 or ((currentDate-previousDate).total_seconds() > 72000*daysBefore and (currentDate-previousDate).total_seconds() < 100800*daysBefore):
+            header = agg[3].split('\n#e ')
+
+            indexSubjectName = header.index('Subject:') + 1
+            if subjectName in header[indexSubjectName]:
+                print 'File found: ' + dataFile
+                indexPositions = header.index('Image classes to sounds:') + 1
+                previousMatrix = ast.literal_eval(header[indexPositions].split('\n')[0].split('\n')[0])
+                return previousMatrix
+
+    return False
+
+
 def subfinder(mylist, pattern):
     answers = []
     for i in range(len(mylist) - len(pattern)+1):
@@ -217,3 +246,9 @@ def readMouse(startTime, button, duration=None):
     #
     #             ISI = design.randomize.rand_int(min_max_ISI[0], min_max_ISI[1])
     #             exp.clock.wait(ISI)
+
+
+def newSoundAllocation(numberCategories):
+    # Random permutation to assign sounds to categories
+    soundToCategories = np.random.permutation(numberCategories).tolist()
+    return soundToCategories
