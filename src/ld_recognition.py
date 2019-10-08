@@ -5,7 +5,7 @@ from expyriment import control, stimuli, io, design, misc
 from expyriment.misc._timer import get_time
 
 from ld_matrix import LdMatrix
-from ld_utils import setCursor, getPreviousMatrix, newRandomPresentation, readMouse
+from ld_utils import setCursor, getPreviousMatrix, newRandomPresentation, readMouse, getPreviousSoundsAllocation
 from config import *
 
 if not windowMode:  # Check WindowMode and Resolution
@@ -42,6 +42,14 @@ if np.any(randomMatrix == interferenceMatrix):
     randomMatrix = m.findMatrix(learningMatrix)
 exp.add_experiment_info([randomMatrix])  # Add listPictures
 
+exp.add_experiment_info(['Image classes order:'])
+exp.add_experiment_info([classPictures])
+exp.add_experiment_info(['Sounds order:'])
+exp.add_experiment_info([sounds])
+
+soundsAllocation = getPreviousSoundsAllocation(subjectName, 0, 'DayOne-Learning')
+exp.add_experiment_info(['Image classes to sounds:'])
+exp.add_experiment_info([soundsAllocation])
 
 exp.add_experiment_info(['Presentation Order: '])  # Save Presentation Order
 
@@ -132,6 +140,7 @@ for nCard in range(presentationOrder.shape[1]):
 
     m._matrix.item(locationCard).setPicture(picturesFolder + listCards[nCard])
     m.plotCard(locationCard, True, bs, True)
+    m.playSound(locationCard)
     exp.clock.wait(presentationCard)
     m.plotCard(locationCard, False, bs, True)
     mouse.show_cursor(True, True)
