@@ -90,6 +90,9 @@ exp.add_experiment_info(presentationOrder)  # Add listPictures
 control.initialize(exp)
 control.start(exp, auto_create_subject_id=True, skip_ready_screen=True)
 
+# LOG and SYNC
+exp.add_experiment_info(['StartExp: {}'.format(exp.clock.time)])  # Add sync info
+
 mouse = io.Mouse()  # Create Mouse instance
 mouse.set_logging(True)  # Log mouse
 mouse.hide_cursor(True, True)  # Hide cursor
@@ -141,8 +144,18 @@ for nCard in range(presentationOrder.shape[1]):
     m._matrix.item(locationCard).setPicture(picturesFolder + listCards[nCard])
     m.plotCard(locationCard, True, bs, True)
     m.playSound(locationCard)
+    cueSound = sounds[m._matrix.item(locationCard).sound]
+    exp.add_experiment_info(['ShowCard_pos_{}_card_{}_timing_{}_sound_{}'.format(locationCard,
+                                                                                 listCards[nCard],
+                                                                                 exp.clock.time,
+                                                                                 cueSound)])  # Add sync info
+
     exp.clock.wait(presentationCard)
     m.plotCard(locationCard, False, bs, True)
+    exp.add_experiment_info(['HideCard_pos_{}_card_{}_timing_{}'.format(locationCard,
+                                                                        listCards[nCard],
+                                                                        exp.clock.time)])  # Add sync info
+
     mouse.show_cursor(True, True)
 
     start = get_time()
@@ -172,7 +185,7 @@ for nCard in range(presentationOrder.shape[1]):
                                       max_width=None)
             matrixA.plot(bs)
             bs.present(False, True)
-            #print presentationOrder[1][nCard] == 0
+            exp.add_experiment_info(['Response_{}_timing_{}'.format('MatrixA', exp.clock.time)])  # Add sync info
 
         elif matrixNoneRectangle.overlapping_with_position(position):
             exp.data.add([exp.clock.time, showMatrix, bool(presentationOrder[1][nCard]==1), rt])
@@ -195,10 +208,11 @@ for nCard in range(presentationOrder.shape[1]):
                                           max_width=None)
             matrixNone.plot(bs)
             bs.present(False, True)
-            #print presentationOrder[1][nCard] == 1
+            exp.add_experiment_info(['Response_{}_timing_{}'.format('None', exp.clock.time)])  # Add sync info
 
         else:
             exp.data.add([exp.clock.time, showMatrix, False, rt])
+            exp.add_experiment_info(['Response_{}_timing_{}'.format('NoRT', exp.clock.time)])  # Add sync info
     else:
         exp.data.add([exp.clock.time, showMatrix, False, rt])
 

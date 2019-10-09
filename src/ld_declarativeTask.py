@@ -126,12 +126,22 @@ while currentCorrectAnswers < correctAnswersMax and nBlock < nbBlocksMax:
         ISI = design.randomize.rand_int(min_max_ISI[0], min_max_ISI[1])
         exp.clock.wait(ISI)
 
+        # LOG and SYNC: Start Presentation
+        exp.add_experiment_info(['StartPresentation_{}_{}'.format(nBlock, exp.clock.time)])  # Add sync info
+
         for nCard in presentationOrder:
             mouse.hide_cursor(True, True)
             m.plotCard(nCard, True, bs, True)  # Show Location for ( 2s )
             m.playSound(nCard)
+            exp.add_experiment_info(['ShowCard_pos_{}_card_{}_timing_{}_sound_{}'.format(nCard, m.listPictures[nCard],
+                                                                                         exp.clock.time, sounds[
+                                                                                             m._matrix.item(
+                                                                                                 nCard).sound])])
+
             exp.clock.wait(presentationCard)
             m.plotCard(nCard, False, bs, True)
+            exp.add_experiment_info(['HideCard_pos_{}_card_{}_timing_{}'.format(nCard, m.listPictures[nCard],
+                                                                                exp.clock.time)])  # Add sync info
 
             ISI = design.randomize.rand_int(min_max_ISI[0], min_max_ISI[1])
             exp.clock.wait(ISI)
@@ -145,6 +155,9 @@ while currentCorrectAnswers < correctAnswersMax and nBlock < nbBlocksMax:
     instructionRectangle.plot(bs)
     instructions.plot(bs)
     bs.present(False, True)
+
+    # LOG and SYNC test start
+    exp.add_experiment_info(['StartTest_{}_{}'.format(nBlock, exp.clock.time)])  # Add sync info
 
     exp.clock.wait(shortRest)  # Short Rest between presentation and cue-recall
 
@@ -165,10 +178,18 @@ while currentCorrectAnswers < correctAnswersMax and nBlock < nbBlocksMax:
 
         m.plotCueCard(True, bs, True)  # Show Cue
         m.playCueSound()
+        cueSound = sounds[ m._matrix.item(nCard).sound]
+        exp.add_experiment_info(['ShowCueCard_pos_{}_card_{}_timing_{}_sound_{}'.format(nCard,
+                                                                                        m.listPictures[nCard],
+                                                                                        exp.clock.time,
+                                                                                        cueSound)])
 
         exp.clock.wait(presentationCard)  # Wait presentationCard
 
         m.plotCueCard(False, bs, True)  # Hide Cue
+        exp.add_experiment_info(['HideCueCard_pos_{}_card_{}_timing_{}'.format(nCard,
+                                                                               m.listPictures[nCard],
+                                                                               exp.clock.time)])  # Add sync info
 
         mouse.show_cursor(True, True)
 
@@ -179,6 +200,13 @@ while currentCorrectAnswers < correctAnswersMax and nBlock < nbBlocksMax:
         if rt is not None:
 
             currentCard = m.checkPosition(position)
+            try:
+                exp.add_experiment_info(['Response_pos_{}_card_{}_timing_{}'.format(currentCard,
+                                                                                    m.listPictures[currentCard],
+                                                                                    exp.clock.time)])  # Add sync info
+            except:
+                exp.add_experiment_info(['Response_pos_{}_ERROR_timing_{}'.format(currentCard,
+                                                                                  exp.clock.time)])  # Add sync info
 
             if currentCard is not None and currentCard not in removeCards:
                 m._matrix.item(currentCard).color = clickColor
@@ -211,6 +239,7 @@ while currentCorrectAnswers < correctAnswersMax and nBlock < nbBlocksMax:
                           path_leaf(m._matrix.item(nCard).stimuli[0].filename),
                           None,
                           rt])
+            exp.add_experiment_info(['NoResponse'])  # Add sync info
 
         ISI = design.randomize.rand_int(min_max_ISI[0], min_max_ISI[1])
         exp.clock.wait(ISI)
@@ -243,12 +272,20 @@ while currentCorrectAnswers < correctAnswersMax and nBlock < nbBlocksMax:
     instructions.plot(bs)
     bs.present(False, True)
 
+    exp.add_experiment_info(['StartShortRest_block_{}_timing_{}'.format(nBlock, exp.clock.time)])  # Add sync info
+
     exp.clock.wait(shortRest)
+
+    exp.add_experiment_info(['EndShortRest_block_{}_timing_{}'.format(nBlock, exp.clock.time)])  # Add sync info
 
     instructionRectangle.plot(bs)
     bs.present(False, True)
 
+    exp.add_experiment_info(['StartRest_block_{}_timing_{}'.format(nBlock, exp.clock.time)])  # Add sync info
+
     exp.clock.wait(restPeriod)
+
+    exp.add_experiment_info(['EndRest_block_{}_timing_{}'.format(nBlock, exp.clock.time)])  # Add sync info
 
     nBlock += 1
 
