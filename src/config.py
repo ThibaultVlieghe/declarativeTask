@@ -150,7 +150,7 @@ elif matrixSize == (7, 7):
 correctAnswersMax = int(ceil((matrixSize[0]*matrixSize[0] - len(removeCards))*7./10))
 
 classPictures = ['a', 'b', 'c']
-numberCategories = len(classPictures)
+numberClasses = len(classPictures)
 
 listPictures = []
 for classPicture in classPictures:

@@ -68,7 +68,7 @@ exp.add_experiment_info([m.listPictures])  # Add listPictures
 previousSoundAllocation = getPreviousSoundsAllocation(subjectName, 0, 'DayOne-Learning')
 
 if not previousSoundAllocation or not keepSoundsAllocation:
-    soundsAllocation = newSoundAllocation(numberCategories)
+    soundsAllocation = newSoundAllocation(numberClasses)
 else:
     soundsAllocation = previousSoundAllocation
 

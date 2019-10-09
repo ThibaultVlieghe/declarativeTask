@@ -248,7 +248,7 @@ def readMouse(startTime, button, duration=None):
     #             exp.clock.wait(ISI)
 
 
-def newSoundAllocation(numberCategories):
-    # Random permutation to assign sounds to categories
-    soundToCategories = np.random.permutation(numberCategories).tolist()
-    return soundToCategories
+def newSoundAllocation(numberClasses):
+    # Random permutation to assign sounds to picture classes
+    soundToClasses = np.random.permutation(numberClasses).tolist()
+    return soundToClasses

@@ -6,7 +6,7 @@ from expyriment.misc import constants
 
 from ld_card import LdCard
 from config import cardSize, linesThickness, cueCardColor, matrixTemplate, listPictures, removeCards, dotColor, bgColor
-from config import numberCategories, picturesFolder, classPictures
+from config import numberClasses, picturesFolder, classPictures
 from config import sounds, soundsFolder
 
 class LdMatrix(object):
@@ -136,7 +136,7 @@ class LdMatrix(object):
     def findMatrix(self, previousMatrix=None, keep=False):
 
         newMatrix = []
-        perm = np.random.permutation(numberCategories)
+        perm = np.random.permutation(numberClasses)
         newClassesPictures = np.asarray(listPictures)[perm]
         newClassesPictures = np.ndarray.tolist(newClassesPictures)
         if previousMatrix is None:   # New Matrix
@@ -152,7 +152,7 @@ class LdMatrix(object):
             newMatrix = previousMatrix
             while np.any(newMatrix == previousMatrix):
                 newMatrix = []
-                perm = np.random.permutation(numberCategories)
+                perm = np.random.permutation(numberClasses)
                 newClassesPictures = np.asarray(listPictures)[perm]
                 newClassesPictures = np.ndarray.tolist(newClassesPictures)
                 for itemMatrix in matrixTemplate:
@@ -177,9 +177,9 @@ class LdMatrix(object):
         for nCard in range(self._matrix.size):
             if nCard not in removeCards:
                 picture = newMatrix[nPict].rstrip('.png')
-                for i in range(numberCategories):
-                    if classPictures[i] in picture:  # if card belongs to the the i-th category
-                        # associate this category's sound to the card
+                for i in range(numberClasses):
+                    if classPictures[i] in picture:  # if card belongs to the the i-th class of pictures
+                        # associate this class' sound to the card
                         self._matrix.item(nCard).setSound(soundsAllocation[i])
                 nPict += 1
 
