@@ -1,6 +1,6 @@
 import glob
 import os
-from math import ceil
+# from math import ceil
 
 rawFolder = os.getcwd() + os.path.sep
 
@@ -146,8 +146,8 @@ elif matrixSize == (7, 7):
                       1, 2, 1, 0, 2, 0, 1,
                       0, 1, 0, 1, 2, 2, 0]
 
-
-correctAnswersMax = int(ceil((matrixSize[0]*matrixSize[0] - len(removeCards))*7./10))
+# correctAnswersMax = int(ceil((matrixSize[0]*matrixSize[0] - len(removeCards))*7./10))
+correctAnswersMax = 38
 
 classPictures = ['a', 'b', 'c']
 numberClasses = len(classPictures)

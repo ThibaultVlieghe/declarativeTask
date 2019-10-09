@@ -99,7 +99,7 @@ mouse.hide_cursor(True, True)  # Hide cursor
 
 setCursor(arrow)
 
-matrixA = stimuli.TextLine('  Matrix A  ',
+matrixA = stimuli.TextLine('  Correct location  ',
                            position=(-windowSize[0]/float(4),
                                      -windowSize[1]/float(2) + (2*m.gap + cardSize[1])/float(2)),
                            text_size=textSize,
@@ -109,7 +109,7 @@ matrixA = stimuli.TextLine('  Matrix A  ',
 matrixARectangle = stimuli.Rectangle(size=matrixA.surface_size, position=matrixA.position,
                                      colour=cardColor)
 
-matrixNone = stimuli.TextLine('  None  ',
+matrixNone = stimuli.TextLine('  Wrong location  ',
                             position=(windowSize[0]/float(4),
                                       -windowSize[1]/float(2) + (2*m.gap + cardSize[1])/float(2)),
                             text_size=textSize,
@@ -166,7 +166,7 @@ for nCard in range(presentationOrder.shape[1]):
     if rt is not None:
         if matrixARectangle.overlapping_with_position(position):
             exp.data.add([exp.clock.time, showMatrix, bool(presentationOrder[1][nCard] == 0), rt])
-            matrixA = stimuli.TextLine('  Matrix A  ',
+            matrixA = stimuli.TextLine('  Correct location  ',
                                           position=(-windowSize[0]/float(4),
                                                     -windowSize[1]/float(2) + (2*m.gap + cardSize[1])/float(2)),
                                           text_font=None, text_size=textSize, text_bold=None, text_italic=None,
@@ -176,7 +176,7 @@ for nCard in range(presentationOrder.shape[1]):
             matrixA.plot(bs)
             bs.present(False, True)
             exp.clock.wait(clicPeriod)
-            matrixA = stimuli.TextLine('  Matrix A  ',
+            matrixA = stimuli.TextLine('  Correct location  ',
                                       position=(-windowSize[0]/float(4),
                                                 -windowSize[1]/float(2) + (2*m.gap + cardSize[1])/float(2)),
                                       text_font=None, text_size=textSize, text_bold=None, text_italic=None,
@@ -189,7 +189,7 @@ for nCard in range(presentationOrder.shape[1]):
 
         elif matrixNoneRectangle.overlapping_with_position(position):
             exp.data.add([exp.clock.time, showMatrix, bool(presentationOrder[1][nCard]==1), rt])
-            matrixNone = stimuli.TextLine('  None  ',
+            matrixNone = stimuli.TextLine('  Wrong location  ',
                                           position=(windowSize[0]/float(4),
                                                     -windowSize[1]/float(2) + (2*m.gap + cardSize[1])/float(2)),
                                           text_font=None, text_size=textSize, text_bold=None, text_italic=None,
@@ -199,7 +199,7 @@ for nCard in range(presentationOrder.shape[1]):
             matrixNone.plot(bs)
             bs.present(False, True)
             exp.clock.wait(clicPeriod)
-            matrixNone = stimuli.TextLine('  None  ',
+            matrixNone = stimuli.TextLine('  Wrong location  ',
                                           position=(windowSize[0]/float(4),
                                                     -windowSize[1]/float(2) + (2*m.gap + cardSize[1])/float(2)),
                                           text_font=None, text_size=textSize, text_bold=None, text_italic=None,
