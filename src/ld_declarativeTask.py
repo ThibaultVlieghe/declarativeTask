@@ -26,6 +26,8 @@ arguments = str(''.join(sys.argv[1:])).split(',')  # Get arguments - experiment 
 experimentName = arguments[0]
 subjectName = arguments[1]
 
+dataFolder = dataFolder + subjectName + os.path.sep
+
 exp = design.Experiment(experimentName)  # Save experiment name
 exp.add_experiment_info(['Subject: '])  # Save Subject Code
 exp.add_experiment_info([subjectName])  # Save Subject Code
@@ -36,9 +38,12 @@ exp.add_data_variable_names(['Time', 'NBlock', 'Picture', 'Answers', 'RT'])
 m = LdMatrix(matrixSize, windowSize)  # Create Matrix
 
 if experimentName == 'DayOne-Learning':
-    oldListPictures = None
+    oldListPictures = getPreviousMatrix(subjectName, 0, 'DayOne-Learning')
+    if oldListPictures is False:
+        oldListPictures = None
     keepSoundsAllocation = True
     keepMatrix = True
+    nbBlocksMax = 2
 elif experimentName == 'DayOne-TestLearning':
     oldListPictures = getPreviousMatrix(subjectName, 0, 'DayOne-Learning')
     keepMatrix = True

@@ -159,4 +159,4 @@ for classPicture in classPictures:
 for NClass in range(len(classPictures)):
     listPictures[NClass] = [p.replace(picturesFolder, '') for p in listPictures[NClass]]
 
-debug = False
+debug = True
