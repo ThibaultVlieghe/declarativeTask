@@ -106,6 +106,9 @@ class LdMatrix(object):
         else:
             return bs
 
+    def returnPicture(self, nCard):
+        return self._matrix.item(nCard).picture
+
     def playSound(self, nCard):
         playsound(soundsFolder + sounds[self._matrix.item(nCard).sound])
 
@@ -167,7 +170,7 @@ class LdMatrix(object):
         nPict = 0
         for nCard in range(self._matrix.size):
             if nCard not in removeCards:
-                self._matrix.item(nCard).setPicture(picturesFolder + newMatrix[nPict], False)
+                self._matrix.item(nCard).setPicture(picturesFolder + newMatrix[nPict], False, picture=newMatrix[nPict])
                 self._matrix.item(nCard).stimuli[0].scale(self._matrix.item(nCard).size[0]/float(300))
                 self._listPictures.append(newMatrix[nPict])
                 nPict += 1

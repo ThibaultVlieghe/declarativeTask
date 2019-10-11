@@ -9,6 +9,7 @@ class LdCard(object):
         self._size = size
         self._stimuli = (stimuli.Picture(templatePicture, position=None),
                          stimuli.Rectangle(size, colour=color, line_width=None, position=None))
+        self._picture = None  # the picture's name, e.g. 'a001.png'
         self._sound = None
 
     @property
@@ -31,6 +32,10 @@ class LdCard(object):
     def color(self):
         return self._stimuli[1].colour
 
+    @property
+    def picture(self):
+        return self._picture
+
     @position.setter
     def position(self, value):
         self._position = value
@@ -42,10 +47,11 @@ class LdCard(object):
         self._stimuli = (
         self.stimuli[0], stimuli.Rectangle(self.size, colour=value, line_width=None, position=self.position))
 
-    def setPicture(self, value, scale=True):
+    def setPicture(self, value, scale=True, picture=None):
         self._stimuli = (stimuli.Picture(value, position=self.position),
                          stimuli.Rectangle(self.size, colour=constants.C_WHITE, line_width=None,
                                            position=self.position))
+        self._picture = picture
         if scale:
             self._stimuli[0].scale(self.size[0]/float(300))
 
