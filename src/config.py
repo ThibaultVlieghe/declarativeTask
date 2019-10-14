@@ -38,7 +38,7 @@ textColor = (0, 0, 0)  # expyriment.misc.constants.C_BLACK
 
 textSize = 50
 matrixSize = (7, 7)
-cardSize = (90, 90)
+cardSize = (80, 80)
 
 ''' Circles '''
 
@@ -165,4 +165,4 @@ for classPicture in classPictures:
 for NClass in range(len(classPictures)):
     listPictures[NClass] = [p.replace(picturesFolder, '') for p in listPictures[NClass]]
 
-debug = True
+debug = False
