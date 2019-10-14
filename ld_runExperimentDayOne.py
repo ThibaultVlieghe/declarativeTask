@@ -23,8 +23,8 @@ dayOneExample = CommandItem(text='Example',
                             should_exit=False)
 
 dayOneLearning = CommandItem(text="Matrix A",
-                             command=python + " src" + os.path.sep + "ld_declarativeTask.py ",
-                             arguments="Day One - Learning, " + sys.argv[1],
+                             command=python + " src" + os.path.sep + "ld_declarativeTask_relauncher.py ",
+                             arguments="DayOne-Learning, " + sys.argv[1],
                              menu=menu,
                              should_exit=False)
 

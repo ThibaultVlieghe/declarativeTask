@@ -21,14 +21,15 @@ else:
 if debug:
     control.set_develop_mode(True)
 
-arguments = str(''.join(sys.argv[1:])).split(',')  # Get arguments - experiment name and subject
+arguments = str(''.join(sys.argv[1])).split(',')  # Get arguments - experiment name and subject
 
 experimentName = arguments[0]
 subjectName = arguments[1]
+subUnitIndex = sys.argv[2]
 
-dataFolder = dataFolder + subjectName + os.path.sep
+suffix = subjectName + '_learning_trial_' + subUnitIndex + '_out_of_' + str(int(numberLearningSubUnits)-1)
 
-exp = design.Experiment(experimentName)  # Save experiment name
+exp = design.Experiment(experimentName, filename_suffix=suffix)  # Save experiment name
 exp.add_experiment_info(['Subject: '])  # Save Subject Code
 exp.add_experiment_info([subjectName])  # Save Subject Code
 
@@ -43,7 +44,7 @@ if experimentName == 'DayOne-Learning':
         oldListPictures = None
     keepSoundsAllocation = True
     keepMatrix = True
-    nbBlocksMax = 2
+    nbBlocksMax = numberBlocksSubUnit
 elif experimentName == 'DayOne-TestLearning':
     oldListPictures = getPreviousMatrix(subjectName, 0, 'DayOne-Learning')
     keepMatrix = True

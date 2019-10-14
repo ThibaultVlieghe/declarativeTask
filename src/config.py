@@ -148,6 +148,12 @@ elif matrixSize == (7, 7):
 
 # correctAnswersMax = int(ceil((matrixSize[0]*matrixSize[0] - len(removeCards))*7./10))
 correctAnswersMax = 38
+numberBlocksLearning = 10
+numberBlocksSubUnit = 2
+numberLearningSubUnits = 5
+if numberBlocksSubUnit * numberLearningSubUnits != numberBlocksLearning:
+    raise ValueError("""the number of blocks of learning is not equal to
+    its number of subUnits * the number of blocks during a subUnit""")
 
 classPictures = ['a', 'b', 'c']
 numberClasses = len(classPictures)
