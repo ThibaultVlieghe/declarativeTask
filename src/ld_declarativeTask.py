@@ -213,7 +213,7 @@ while currentCorrectAnswers < correctAnswersMax and nBlock < nbBlocksMax:
             currentCard = m.checkPosition(position)
             try:
                 exp.add_experiment_info(['Response_pos_{}_card_{}_timing_{}'.format(currentCard,
-                                                                                    m.listPictures[currentCard],
+                                                                                    m.returnPicture(currentCard),
                                                                                     exp.clock.time)])  # Add sync info
             except:
                 exp.add_experiment_info(['Response_pos_{}_ERROR_timing_{}'.format(currentCard,
