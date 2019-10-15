@@ -21,13 +21,18 @@ else:
 if debug:
     control.set_develop_mode(True)
 
-arguments = str(''.join(sys.argv[1])).split(',')  # Get arguments - experiment name and subject
 
-experimentName = arguments[0]
-subjectName = arguments[1]
-subUnitIndex = sys.argv[2]
-
-suffix = subjectName + '_learning_trial_' + subUnitIndex + '_out_of_' + str(int(numberLearningSubUnits)-1)
+if len(sys.argv) == 3:  # declarativeTask was executed by relauncher
+    arguments = str(''.join(sys.argv[1])).split(',')  # Get arguments - experiment name and subject
+    experimentName = arguments[0]
+    subjectName = arguments[1]
+    subUnitIndex = sys.argv[2]
+    suffix = subjectName + '_learning_trial_' + subUnitIndex + '_out_of_' + str(int(numberLearningSubUnits)-1)
+else:
+    arguments = str(''.join(sys.argv[1:])).split(',')  # Get arguments - experiment name and subject
+    experimentName = arguments[0]
+    subjectName = arguments[1]
+    suffix = None
 
 exp = design.Experiment(experimentName, filename_suffix=suffix)  # Save experiment name
 exp.add_experiment_info(['Subject: '])  # Save Subject Code
