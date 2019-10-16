@@ -3,6 +3,7 @@ import ntpath
 import os
 import pygame
 from datetime import datetime
+from time import time
 
 import numpy as np
 from dateutil.parser import parse
@@ -151,6 +152,43 @@ def getPreviousSoundsAllocation(subjectName, daysBefore, experienceName):
     return False
 
 
+def getPreviousState(subjectName, daysBefore, experienceName):
+    currentDate = datetime.now()
+
+    dataFiles = [each for each in os.listdir(dataFolder) if each.endswith('.xpd')]
+
+    for dataFile in dataFiles:
+        agg = misc.data_preprocessing.read_datafile(dataFolder + dataFile, only_header_and_variable_names=True)
+
+        previousDate = parse(agg[2]['date'])
+
+        try:
+            agg[3].index(experienceName)
+        except (ValueError):
+            continue
+
+        if daysBefore == 0 or ((currentDate - previousDate).total_seconds() > 72000 * daysBefore and (
+                currentDate - previousDate).total_seconds() < 100800 * daysBefore):
+            header = agg[3].split('\n#e ')
+
+            indexSubjectName = header.index('Subject:') + 1
+            if subjectName in header[indexSubjectName]:
+                try:
+                    indexPositions = header.index("['Experiment ended with success']")
+                    # experiment was successfully completed already
+                    print "experiment was a success"
+                    return True  # we can stop the experiment here
+                except:
+                    pass
+                try:
+                    indexPositions = header.index("['Experiment completed without interruption']")
+                except:
+                    # the experiment was manually interrupted. We should stop the experiment here
+                    print "experiment was manually interrupted. Ending the experiment"
+                    return True
+    return False
+
+
 def subfinder(mylist, pattern):
     answers = []
     for i in range(len(mylist) - len(pattern)+1):
@@ -252,3 +290,7 @@ def newSoundAllocation(numberClasses):
     # Random permutation to assign sounds to picture classes
     soundToClasses = np.random.permutation(numberClasses).tolist()
     return soundToClasses
+
+
+def absoluteTime(firstTime):
+    return int((time()*1000))-firstTime
