@@ -71,8 +71,6 @@ if oldListPictures is False:
 
 newMatrix = m.findMatrix(oldListPictures, keepMatrix)  # Find newMatrix
 
-# TEMP
-control.set_skip_wait_functions(True)
 exp.add_experiment_info(['Positions pictures:'])
 
 control.initialize(exp)
