@@ -7,6 +7,7 @@ from expyriment.misc._timer import get_time
 from ld_matrix import LdMatrix
 from ld_utils import setCursor, getPreviousMatrix, newRandomPresentation, readMouse, getPreviousSoundsAllocation
 from config import *
+from ttl_catch_keyboard import wait_for_ttl_keyboard5
 
 if not windowMode:  # Check WindowMode and Resolution
     control.defaults.window_mode = windowMode
@@ -132,6 +133,8 @@ bs.present(False, True)
 
 ISI = design.randomize.rand_int(min_max_ISI[0], min_max_ISI[1])
 exp.clock.wait(ISI)
+
+wait_for_ttl_keyboard()
 
 for nCard in range(presentationOrder.shape[1]):
     locationCard = int(presentationOrder[0][nCard])

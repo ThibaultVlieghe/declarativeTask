@@ -11,6 +11,7 @@ from ld_utils import setCursor, newRandomPresentation, getPreviousMatrix, path_l
 from ld_utils import getPreviousSoundsAllocation, newSoundAllocation
 from ld_utils import absoluteTime
 from config import *
+from ttl_catch_keyboard import wait_for_ttl_keyboard
 
 if not windowMode:  # Check WindowMode and Resolution
     control.defaults.window_mode = windowMode
@@ -120,6 +121,7 @@ presentationOrder = newRandomPresentation()
 
 while currentCorrectAnswers < correctAnswersMax and nBlock < nbBlocksMax:
     presentationOrder = newRandomPresentation(presentationOrder)
+    wait_for_ttl_keyboard()
     if 1 != nbBlocksMax:
         exp.add_experiment_info(['Block {} - Presentation'.format(nBlock)])  # Add listPictures
         exp.add_experiment_info(presentationOrder)  # Add listPictures
