@@ -34,10 +34,17 @@ dayOneTestMatrixA = CommandItem(text="Test Matrix A",
                                 menu=menu,
                                 should_exit=False)
 
-dayOneRest = CommandItem(text='Rest',
-                         command=python + " src" + os.path.sep + "ld_rest.py",
-                         menu=menu,
-                         should_exit=False)
+dayOneConsolidationMatrixA = CommandItem(text="Consolidation Matrix A",
+                                command=python + " src" + os.path.sep + "ld_declarativeTask.py ",
+                                arguments="Day One - Test Consolidation, " + sys.argv[1],
+                                menu=menu,
+                                should_exit=False)
+
+dayOneRecognition = CommandItem(text="Recognition",
+                                  command=python + " src" + os.path.sep + "ld_recognition.py ",
+                                  arguments="Day One - Recognition, " + sys.argv[1],
+                                  menu=menu,
+                                  should_exit=False)
 
 dayOneConfig = CommandItem(text='Show config file',
                            command=python + " src" + os.path.sep + "ld_showConfigFile.py",
@@ -47,7 +54,8 @@ dayOneConfig = CommandItem(text='Show config file',
 menu.append_item(dayOneExample)
 menu.append_item(dayOneLearning)
 menu.append_item(dayOneTestMatrixA)
-menu.append_item(dayOneRest)
+menu.append_item(dayOneConsolidationMatrixA)
+menu.append_item(dayOneRecognition)
 menu.append_item(dayOneConfig)
 
 menu.show()
