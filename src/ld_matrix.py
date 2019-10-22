@@ -1,4 +1,5 @@
 import numpy as np
+from math import floor
 from playsound import playsound
 
 from expyriment.stimuli import Circle, Rectangle
@@ -174,6 +175,35 @@ class LdMatrix(object):
                 self._matrix.item(nCard).stimuli[0].scale(self._matrix.item(nCard).size[0]/float(300))
                 self._listPictures.append(newMatrix[nPict])
                 nPict += 1
+
+    def newRecognitionMatrix(self, previousMatrix):
+        # dummyMatrix is a matrix the size of previousMatrix that stores only the pictures category under 0,1,2 int format
+        # 0 = first category (often a images), 1 = second category (often b), etc.
+        dummyMatrix = [None] * len(previousMatrix)
+        for i in range(len(previousMatrix)):
+            for j in range(len(classPictures)):
+                if classPictures[j] in previousMatrix[i]:
+                    dummyMatrix[i] = j
+
+        # Shifting categories
+        perm = np.random.permutation(3).tolist()  # WARNING: PARAMETER HARD CODED
+        while any(perm[i] == range(3)[i] for i in range(3)):  # WARNING: PARAMETER HARD CODED
+            perm = np.random.permutation(3).tolist()  # WARNING: PARAMETER HARD CODED
+        dummyMatrix = [perm[i] for i in dummyMatrix]
+
+        # copying class Pictures to a different object
+        tempListPictures = list(listPictures)
+
+        currentCategoryIndex = [0] * len(tempListPictures)
+
+        # Filling matrix with images
+        newMatrix = [0] * len(previousMatrix)
+        for i in range(len(previousMatrix)):
+            category = dummyMatrix[i]
+            newMatrix[i] = tempListPictures[category][currentCategoryIndex[dummyMatrix[i]]]
+            currentCategoryIndex[category] += 1
+
+        return newMatrix
 
     def associateSounds(self, newMatrix, soundsAllocation):
         nPict = 0

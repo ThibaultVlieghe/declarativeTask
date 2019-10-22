@@ -31,15 +31,14 @@ exp.add_experiment_info([subjectName])  # Save Subject Code
 exp.add_data_variable_names(['Time', 'Matrix', 'CorrectAnswer', 'RT'])
 
 exp.add_experiment_info(['Learning: '])  # Save Subject Code
-learningMatrix = getPreviousMatrix(subjectName, 2, 'DayOne-Learning')
+learningMatrix = getPreviousMatrix(subjectName, 0, 'DayOne-Learning')
 exp.add_experiment_info([learningMatrix])  # Add listPictures
 
-interferenceMatrix = getPreviousMatrix(subjectName, 1, 'DayTwo-Interference')
+# interferenceMatrix = getPreviousMatrix(subjectName, 0, 'DayTwo-Interference')
 
 exp.add_experiment_info(['RandomMatrix: '])  # Save Subject Code
-randomMatrix = m.findMatrix(learningMatrix)
-if np.any(randomMatrix == interferenceMatrix):
-    randomMatrix = m.findMatrix(learningMatrix)
+randomMatrix = m.newRecognitionMatrix(learningMatrix)
+
 exp.add_experiment_info([randomMatrix])  # Add listPictures
 
 exp.add_experiment_info(['Image classes order:'])
@@ -54,10 +53,10 @@ exp.add_experiment_info([soundsAllocation])
 exp.add_experiment_info(['Presentation Order: '])  # Save Presentation Order
 
 presentationMatrixLearningOrder = newRandomPresentation()
-presentationMatrixLearningOrder = np.vstack((presentationMatrixLearningOrder,np.zeros(m.size[0]*m.size[1]-len(removeCards))))
+presentationMatrixLearningOrder = np.vstack((presentationMatrixLearningOrder, np.zeros(m.size[0]*m.size[1]-len(removeCards))))
 
 presentationMatrixRandomOrder = newRandomPresentation(presentationMatrixLearningOrder)
-presentationMatrixRandomOrder = np.vstack((presentationMatrixRandomOrder,np.ones(m.size[0]*m.size[1]-len(removeCards))))
+presentationMatrixRandomOrder = np.vstack((presentationMatrixRandomOrder, np.ones(m.size[0]*m.size[1]-len(removeCards))))
 
 presentationOrder = np.hstack((presentationMatrixLearningOrder, presentationMatrixRandomOrder))
 
@@ -142,7 +141,14 @@ for nCard in range(presentationOrder.shape[1]):
         showMatrix = 'MatrixRandom'
 
     m._matrix.item(locationCard).setPicture(picturesFolder + listCards[nCard])
+    picture = listCards[nCard].rstrip(".png")
+    for i in range(numberClasses):
+        if classPictures[i] in picture:  # if card belongs to the the i-th class of pictures
+            # associate this class' sound to the card
+            m._matrix.item(locationCard).setSound(soundsAllocation[i])
+            break
     m.plotCard(locationCard, True, bs, True)
+
     m.playSound(locationCard)
     cueSound = sounds[m._matrix.item(locationCard).sound]
     exp.add_experiment_info(['ShowCard_pos_{}_card_{}_timing_{}_sound_{}'.format(locationCard,
