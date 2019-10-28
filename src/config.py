@@ -10,7 +10,7 @@ dataFolder = rawFolder + 'data' + os.path.sep
 
 mouseButton = 1
 
-windowMode = False  # if False use FullScreen
+windowMode = True  # if False use FullScreen
 windowSize = (1024, 768)  # if windowMode is True then use windowSize
 
 picturesExamples = ['triangle.png','square.png', 'circle.png']
@@ -34,7 +34,7 @@ textColor = (0, 0, 0)  # expyriment.misc.constants.C_BLACK
 
 
 textSize = 50
-matrixSize = (6, 6)
+matrixSize = (5, 5)
 cardSize = (90, 90)
 
 ''' Circles '''
@@ -133,6 +133,7 @@ elif matrixSize == (6,6):
 correctAnswersMax = int(ceil((matrixSize[0]*matrixSize[0] - len(removeCards))*7./10))
 
 classPictures = ['a','c','v','f']
+numberClasses = len(classPictures)
 
 listPictures = []
 for classPicture in classPictures:

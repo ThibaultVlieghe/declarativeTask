@@ -3,7 +3,7 @@ from expyriment.stimuli import Circle
 
 from ld_card import LdCard
 from config import cardSize, linesThickness, cueCardColor, matrixTemplate, listPictures, removeCards, dotColor, bgColor
-from config import picturesFolder
+from config import picturesFolder, classPictures, numberClasses
 
 
 class LdMatrix(object):
@@ -103,6 +103,9 @@ class LdMatrix(object):
         else:
             return bs
 
+    def returnPicture(self, nCard):
+        return self._matrix.item(nCard).picture
+
     def plotDefault(self, bs, draw=False):
         for nCard in range(self._matrix.size):
             if nCard in removeCards:
@@ -124,7 +127,7 @@ class LdMatrix(object):
     def findMatrix(self, previousMatrix=None, keep=False):
 
         newMatrix = []
-        perm = np.random.permutation(4)
+        perm = np.random.permutation(numberClasses)
         newClassesPictures = np.asarray(listPictures)[perm]
         newClassesPictures = np.ndarray.tolist(newClassesPictures)
         if previousMatrix is None:   # New Matrix
@@ -140,7 +143,7 @@ class LdMatrix(object):
             newMatrix = previousMatrix
             while np.any(newMatrix == previousMatrix):
                 newMatrix = []
-                perm = np.random.permutation(4)
+                perm = np.random.permutation(numberClasses)
                 newClassesPictures = np.asarray(listPictures)[perm]
                 newClassesPictures = np.ndarray.tolist(newClassesPictures)
                 for itemMatrix in matrixTemplate:
@@ -155,9 +158,49 @@ class LdMatrix(object):
         nPict = 0
         for nCard in range(self._matrix.size):
             if nCard not in removeCards:
-                self._matrix.item(nCard).setPicture(picturesFolder + newMatrix[nPict], False)
+                self._matrix.item(nCard).setPicture(picturesFolder + newMatrix[nPict], False, picture=newMatrix[nPict])
                 self._matrix.item(nCard).stimuli[0].scale(self._matrix.item(nCard).size[0]/float(300))
                 self._listPictures.append(newMatrix[nPict])
+                nPict += 1
+
+    def newRecognitionMatrix(self, previousMatrix):
+        # dummyMatrix is a matrix the size of previousMatrix that stores only the pictures category under 0,1,2 int format
+        # 0 = first category (often a images), 1 = second category (often b), etc.
+        dummyMatrix = [None] * len(previousMatrix)
+        for i in range(len(previousMatrix)):
+            for j in range(numberClasses):
+                if classPictures[j] in previousMatrix[i]:
+                    dummyMatrix[i] = j
+
+        # Shifting categories
+        perm = np.random.permutation(numberClasses).tolist()  # WARNING: PARAMETER HARD CODED
+        while any(perm[i] == range(numberClasses)[i] for i in range(numberClasses)):  # WARNING: PARAMETER HARD CODED
+            perm = np.random.permutation(numberClasses).tolist()  # WARNING: PARAMETER HARD CODED
+        dummyMatrix = [perm[i] for i in dummyMatrix]
+
+        # copying class Pictures to a different object
+        tempListPictures = list(listPictures)
+
+        currentCategoryIndex = [0] * len(tempListPictures)
+
+        # Filling matrix with images
+        newMatrix = [0] * len(previousMatrix)
+        for i in range(len(previousMatrix)):
+            category = dummyMatrix[i]
+            newMatrix[i] = tempListPictures[category][currentCategoryIndex[dummyMatrix[i]]]
+            currentCategoryIndex[category] += 1
+
+        return newMatrix
+
+    def associateSounds(self, newMatrix, soundsAllocation):
+        nPict = 0
+        for nCard in range(self._matrix.size):
+            if nCard not in removeCards:
+                picture = newMatrix[nPict].rstrip('.png')
+                for i in range(numberClasses):
+                    if classPictures[i] in picture:  # if card belongs to the the i-th class of pictures
+                        # associate this class' sound to the card
+                        self._matrix.item(nCard).setSound(soundsAllocation[i])
                 nPict += 1
 
     def checkPosition(self, position):

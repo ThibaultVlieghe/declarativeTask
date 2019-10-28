@@ -41,6 +41,10 @@ elif experimentName == 'DayOne-TestLearning':
     oldListPictures = getPreviousMatrix(subjectName, 0, 'DayOne-Learning')
     keepMatrix = True
     nbBlocksMax = 1
+elif experimentName == "DayOne-TestConsolidation":
+    oldListPictures = getPreviousMatrix(subjectName, 0, 'DayOne-Learning')
+    keepMatrix = True
+    nbBlocksMax = 1
 
 if oldListPictures is False:
     print FAIL + "Warning: no old list of pictures found" + ENDC
@@ -112,12 +116,12 @@ while currentCorrectAnswers < correctAnswersMax and nBlock < nbBlocksMax:
             mouse.hide_cursor(True, True)
             m.plotCard(nCard, True, bs, True)  # Show Location for ( 2s )
             exp.add_experiment_info(['ShowCard_pos_{}_card_{}_timing_{}'.format(nCard,
-                                                                                m.listPictures[nCard],
+                                                                                m.returnPicture(nCard),
                                                                                 exp.clock.time)])
 
             exp.clock.wait(presentationCard)
             m.plotCard(nCard, False, bs, True)
-            exp.add_experiment_info(['HideCard_pos_{}_card_{}_timing_{}'.format(nCard, m.listPictures[nCard],
+            exp.add_experiment_info(['HideCard_pos_{}_card_{}_timing_{}'.format(nCard, m.returnPicture(nCard),
                                                                                 exp.clock.time)])  # Add sync info
 
             ISI = design.randomize.rand_int(min_max_ISI[0], min_max_ISI[1])
@@ -151,12 +155,12 @@ while currentCorrectAnswers < correctAnswersMax and nBlock < nbBlocksMax:
         m._cueCard.setPicture(m._matrix.item(nCard).stimuli[0].filename)  # Associate Picture to CueCard
 
         m.plotCueCard(True, bs, True)  # Show Cue
-        exp.add_experiment_info(['ShowCueCard_pos_{}_card_{}_timing_{}'.format(nCard, m.listPictures[nCard], exp.clock.time)])  # Add sync info
+        exp.add_experiment_info(['ShowCueCard_pos_{}_card_{}_timing_{}'.format(nCard, m.returnPicture(nCard), exp.clock.time)])  # Add sync info
 
         exp.clock.wait(presentationCard)  # Wait presentationCard
 
         m.plotCueCard(False, bs, True)  # Hide Cue
-        exp.add_experiment_info(['HideCueCard_pos_{}_card_{}_timing_{}'.format(nCard, m.listPictures[nCard], exp.clock.time)])  # Add sync info
+        exp.add_experiment_info(['HideCueCard_pos_{}_card_{}_timing_{}'.format(nCard, m.returnPicture(nCard), exp.clock.time)])  # Add sync info
 
         mouse.show_cursor(True, True)
 
