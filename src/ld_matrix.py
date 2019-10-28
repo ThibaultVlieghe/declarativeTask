@@ -1,7 +1,5 @@
 import numpy as np
-from math import floor
-from playsound import playsound
-
+import os
 from expyriment.stimuli import Circle, Rectangle
 from expyriment.misc import constants
 
@@ -111,10 +109,10 @@ class LdMatrix(object):
         return self._matrix.item(nCard).picture
 
     def playSound(self, nCard):
-        playsound(soundsFolder + sounds[self._matrix.item(nCard).sound])
+        os.system('ffplay -nodisp -loglevel quiet -autoexit ' + soundsFolder + sounds[self._matrix.item(nCard).sound])
 
     def playCueSound(self):
-        playsound(soundsFolder + sounds[self._cueCard.sound])
+        os.system('ffplay -nodisp -loglevel quiet -autoexit ' + soundsFolder + sounds[self._cueCard.sound])
 
     def plotDefault(self, bs, draw=False):
         for nCard in range(self._matrix.size):

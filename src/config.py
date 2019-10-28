@@ -46,7 +46,8 @@ startSpace = cardSize[1] + 20
 
 nbBlocksMax = 10
 
-presentationCard = 2000
+presentationCard = 1600  # originally 2000 for 2s, this time was diminished due to the time taken by the sound to play
+# approximately .4s
 responseTime = 5000
 
 shortRest = 2500
