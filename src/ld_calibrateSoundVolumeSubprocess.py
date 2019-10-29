@@ -1,8 +1,9 @@
 import subprocess
 import keyboard
 import os
+import sys
 import pickle
-from config import sounds, soundsFolder
+from config import rawFolder, soundsFolder, dataFolder, sounds, tempSounds
 
 # Documentation: https://trac.ffmpeg.org/wiki/AudioVolume
 # https://ffmpeg.org/ffmpeg.html#Main-options
@@ -12,12 +13,12 @@ from config import sounds, soundsFolder
 
 
 def play_sound(j):
-    subprocess.call('ffplay -nodisp -loglevel quiet -autoexit ' + soundsFolder + 'sound' + str(j) + '.wav')
+    subprocess.call('ffplay -nodisp -loglevel quiet -autoexit ' + soundsFolder + tempSounds[j])
 
 
 def change_volume(j, volume_adjustment_db=0):
     input_sound = soundsFolder + sounds[j]
-    output_sound = soundsFolder + 'sound' + str(j) + '.wav'
+    output_sound = soundsFolder + tempSounds[j]
     command = 'ffmpeg -loglevel quiet -y -i ' + input_sound + \
               ' -filter:a "volume=' + str(volume_adjustment_db) + 'dB" ' + output_sound + ' -nostdin'
     subprocess.call(command)
@@ -43,13 +44,14 @@ def present_options(j):
 def delete_temp_files():
     for j in range(len(sounds)):
         try:
-            output_sound = soundsFolder + 'sound' + str(j) + '.wav'
+            output_sound = soundsFolder + tempSounds[j]
             os.remove(output_sound)
         except:
             pass
 
 
 ########################################################################################################################
+subject_name = ''.join(sys.argv[1:])
 soundsVolumeAdjustmentIndB = [0] * len(sounds)
 
 for i in range(len(sounds)):
@@ -70,5 +72,7 @@ for i in range(len(sounds)):
 delete_temp_files()
 
 # Saving sounds adjustment: (this script is supposed to be executed in src)
-with open('..' + os.path.sep + 'data' + os.path.sep + 'soundsVolumeAdjustmentIndB.pkl', 'w') as f:
+subject_file = 'soundsVolumeAdjustmentIndB_' + subject_name + '.pkl'
+
+with open(dataFolder + subject_file, 'w') as f:
     pickle.dump(soundsVolumeAdjustmentIndB, f)
