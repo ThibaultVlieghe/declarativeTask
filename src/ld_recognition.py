@@ -9,6 +9,8 @@ from ld_utils import setCursor, getPreviousMatrix, newRandomPresentation, readMo
 from ttl_catch_keyboard import wait_for_ttl_keyboard
 from config import *
 
+from ld_calibrateSoundVolumeSubprocess import create_temp_sound_files, delete_temp_files
+
 if not windowMode:  # Check WindowMode and Resolution
     control.defaults.window_mode = windowMode
     control.defaults.window_size = misc.get_monitor_resolution()
@@ -50,6 +52,10 @@ exp.add_experiment_info([sounds])
 soundsAllocation = getPreviousSoundsAllocation(subjectName, 0, 'DayOne-Learning')
 exp.add_experiment_info(['Image classes to sounds:'])
 exp.add_experiment_info([soundsAllocation])
+
+soundsVolumeAdjustmentIndB = create_temp_sound_files(subjectName)
+exp.add_experiment_info(['Sounds Volume adjustment (in dB):'])
+exp.add_experiment_info([soundsVolumeAdjustmentIndB])
 
 exp.add_experiment_info(['Presentation Order: '])  # Save Presentation Order
 
@@ -227,5 +233,7 @@ for nCard in range(presentationOrder.shape[1]):
 
     ISI = design.randomize.rand_int(min_max_ISI[0], min_max_ISI[1])
     exp.clock.wait(ISI)
+
+delete_temp_files()
 
 exp.clock.wait(5000)

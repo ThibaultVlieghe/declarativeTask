@@ -12,6 +12,7 @@ from ld_utils import getPreviousSoundsAllocation, newSoundAllocation
 from ld_utils import absoluteTime
 from ttl_catch_keyboard import wait_for_ttl_keyboard
 from config import *
+from ld_sound import create_temp_sound_files, delete_temp_files
 
 if not windowMode:  # Check WindowMode and Resolution
     control.defaults.window_mode = windowMode
@@ -94,6 +95,14 @@ exp.add_experiment_info([sounds])
 exp.add_experiment_info(['Image classes to sounds:'])
 exp.add_experiment_info([soundsAllocation])
 
+soundsVolumeAdjustmentIndB = create_temp_sound_files(subjectName)
+exp.add_experiment_info(['Sounds Volume adjustment (in dB):'])
+exp.add_experiment_info([soundsVolumeAdjustmentIndB])
+if soundsVolumeAdjustmentIndB != [0, 0, 0]:
+    volumeAdjusted = True
+else:
+    volumeAdjusted = False
+
 m.associateSounds(newMatrix, soundsAllocation)  # Associate Sounds to Cards depending on pictures
 
 control.start(exp, auto_create_subject_id=True, skip_ready_screen=True)
@@ -152,7 +161,7 @@ while currentCorrectAnswers < correctAnswersMax and nBlock < nbBlocksMax:
         for nCard in presentationOrder:
             mouse.hide_cursor(True, True)
             m.plotCard(nCard, True, bs, True)  # Show Location for ( 2s )
-            m.playSound(nCard)
+            m.playSound(nCard, volumeAdjusted=volumeAdjusted)
             exp.add_experiment_info(['ShowCard_pos_{}_card_{}_timing_{}_sound_{}'.format(nCard, m.returnPicture(nCard),
                                                                                          absoluteTime(firstTime), sounds[
                                                                                              m._matrix.item(
@@ -197,7 +206,7 @@ while currentCorrectAnswers < correctAnswersMax and nBlock < nbBlocksMax:
         m._cueCard.setSound(m._matrix.item(nCard).sound)  # Associate Sound to CueCard
 
         m.plotCueCard(True, bs, True)  # Show Cue
-        m.playCueSound()
+        m.playCueSound(volumeAdjusted=volumeAdjusted)
         cueSound = sounds[ m._matrix.item(nCard).sound]
         exp.add_experiment_info(['ShowCueCard_pos_{}_card_{}_timing_{}_sound_{}'.format(nCard,
                                                                                         m.returnPicture(nCard),
@@ -313,7 +322,9 @@ exp.add_experiment_info(['Experiment completed without interruption'])
 
 if currentCorrectAnswers >= correctAnswersMax:
     exp.add_experiment_info(['Experiment ended with success'])
-
 exp.add_experiment_info([])
+
+delete_temp_files()
+
 exp.clock.wait(5000)
 control.end()

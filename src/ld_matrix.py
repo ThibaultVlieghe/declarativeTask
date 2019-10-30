@@ -1,12 +1,13 @@
 import numpy as np
-import os
+import subprocess
 from expyriment.stimuli import Circle, Rectangle
 from expyriment.misc import constants
+from playsound import playsound
 
 from ld_card import LdCard
 from config import cardSize, linesThickness, cueCardColor, matrixTemplate, listPictures, removeCards, dotColor, bgColor
 from config import numberClasses, picturesFolder, classPictures
-from config import sounds, soundsFolder
+from config import sounds, soundsFolder, tempSounds
 
 class LdMatrix(object):
     def __init__(self, size, windowSize):
@@ -108,11 +109,26 @@ class LdMatrix(object):
     def returnPicture(self, nCard):
         return self._matrix.item(nCard).picture
 
-    def playSound(self, nCard):
-        os.system('ffplay -nodisp -loglevel quiet -autoexit ' + soundsFolder + sounds[self._matrix.item(nCard).sound])
+    def playSound(self, nCard, volumeAdjusted = False):
+        if volumeAdjusted:
+            command = 'ffplay -nodisp -loglevel quiet -autoexit ' + soundsFolder +\
+                      tempSounds[self._matrix.item(nCard).sound]
+            subprocess.call(command)
+        else:
+            command = 'ffplay -nodisp -loglevel quiet -autoexit ' + soundsFolder +\
+                      sounds[self._matrix.item(nCard).sound]
+            subprocess.call(command)
 
-    def playCueSound(self):
-        os.system('ffplay -nodisp -loglevel quiet -autoexit ' + soundsFolder + sounds[self._cueCard.sound])
+    def playCueSound(self, volumeAdjusted = False):
+        if volumeAdjusted:
+            command = 'ffplay -nodisp -loglevel quiet -autoexit ' + soundsFolder + \
+                      tempSounds[self._cueCard.sound]
+            subprocess.call(command)
+        else:
+            command = 'ffplay -nodisp -loglevel quiet -autoexit ' + soundsFolder + \
+                      sounds[self._cueCard.sound]
+            playsound(soundsFolder + sounds[self._cueCard.sound])
+            subprocess.call(command)
 
     def plotDefault(self, bs, draw=False):
         for nCard in range(self._matrix.size):
