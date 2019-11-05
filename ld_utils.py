@@ -1,383 +1,326 @@
-import ast
-import ntpath
-import os
-import pygame
-from datetime import datetime
+import csv
 
 import numpy as np
+import ast
 import re
-from dateutil.parser import parse
-from expyriment import misc, stimuli
-from expyriment.io import Keyboard
-from expyriment.misc._timer import get_time
-from expyriment.misc.geometry import coordinates2position
-from expyriment.misc import data_preprocessing
 from scipy.spatial import distance
 
-from config import linesThickness, cardSize, colorLine, windowSize, bgColor, matrixSize, dataFolder, removeCards
+from expyriment.misc import data_preprocessing
 
+dont_suppress_card_double_checking = True
 
-def checkWindowParameters(iWindowSize):
-    result = False
-
-    originalResolution = misc.get_monitor_resolution()
-
-    if iWindowSize[0] <= originalResolution[0] and iWindowSize[1] <= originalResolution[1]:
-        result = True
-
-    return result
-
-
-def drawLines(windowSize, gap, bs):
-
-    linesPositions = np.empty([2,2], object)
-    linesPositions[0,0] = (-windowSize[0]/float(2), windowSize[1]/float(2) - 2 * gap - cardSize[0] - linesThickness / float(2))
-    linesPositions[0,1] = (windowSize[0]/float(2), windowSize[1]/float(2) - 2 * gap - cardSize[0] - linesThickness / float(2))
-    linesPositions[1,0] = (-windowSize[0]/float(2), -windowSize[1]/float(2) + 2 * gap + cardSize[1] + linesThickness / float(2))
-    linesPositions[1,1] = (windowSize[0]/float(2), -windowSize[1]/float(2) + 2 * gap + cardSize[1] + linesThickness / float(2))
-
-    lines = np.empty([2], object)
-    lines[0] = stimuli.Line(linesPositions[0,0], linesPositions[0,1], linesThickness, colour=colorLine, anti_aliasing=None)
-    lines[1] = stimuli.Line(linesPositions[1,0], linesPositions[1,1], linesThickness, colour=colorLine, anti_aliasing=None)
-
-    for line in lines:
-        line.plot(bs)
-
-    bs.present()
-
-
-def plotLine(bs, gap, color=bgColor):
-    linePositions = np.empty([2], object)
-    linePositions[0] = (-cardSize[0]/float(2), windowSize[1]/float(2) - 2*gap - cardSize[0] - linesThickness/float(2))
-    linePositions[1] = (cardSize[0]/float(2), windowSize[1]/float(2) - 2*gap - cardSize[0] - linesThickness/float(2))
-
-    line = stimuli.Line(linePositions[0], linePositions[1], linesThickness, colour=color)
-    line.plot(bs)
-
-    return bs
-
-
-def newRandomPresentation(oldPresentation=None):
-
-    newPresentation = np.array(range(matrixSize[0]*matrixSize[1]))
-    if removeCards:
-        removeCards.sort(reverse=True)
-        for nCard in removeCards:
-            newPresentation = np.delete(newPresentation, nCard)
-
-    newPresentation = np.random.permutation(newPresentation)
-
-    if oldPresentation is not None:
-
-        while len(longestSubstringFinder(str(oldPresentation), str(newPresentation)).split()) > 2:
-            newPresentation = np.array(range(matrixSize[0]*matrixSize[1]))
-
-            if removeCards:
-                removeCards.sort(reverse=True)
-                for nCard in removeCards:
-                    newPresentation = np.delete(newPresentation, nCard)
-
-            newPresentation = np.random.permutation(newPresentation)
-
-    return newPresentation
-
-
-def longestSubstringFinder(string1, string2):
-    answer = ""
-    len1, len2 = len(string1), len(string2)
-    for i in range(len1):
-        match = ""
-        for j in range(len2):
-            if (i + j < len1 and string1[i + j] == string2[j]):
-                match += string2[j]
-            else:
-                if (len(match) > len(answer)): answer = match
-                match = ""
-    return answer
-
-
-def getPreviousMatrix(subjectName, daysBefore, experienceName):
-
-    currentDate = datetime.now()
-
-    dataFiles = [each for each in os.listdir(dataFolder) if each.endswith('.xpd')]
-
-    for dataFile in dataFiles:
-        agg = misc.data_preprocessing.read_datafile(dataFolder + dataFile, only_header_and_variable_names=True)
-
-        previousDate = parse(agg[2]['date'])
-
-        try:
-            agg[3].index(experienceName)
-        except (ValueError):
-            continue
-
-        if daysBefore == 0 or ((currentDate-previousDate).total_seconds() > 72000*daysBefore and (currentDate-previousDate).total_seconds() < 100800*daysBefore):
-            header = agg[3].split('\n#e ')
-
-            indexSubjectName = header.index('Subject:') + 1
-            if subjectName in header[indexSubjectName]:
-                print 'File found: ' + dataFile
-                indexPositions = header.index('Positions pictures:') + 1
-                previousMatrix = ast.literal_eval(header[indexPositions].split('\n')[0].split('\n')[0])
-                return previousMatrix
-
-    return False
-
-
-def subfinder(mylist, pattern):
-    answers = []
-    for i in range(len(mylist) - len(pattern)+1):
-        if np.all(mylist[i:i+len(pattern)] == pattern):
-            answers.append(True)
-        else:
-            answers.append(False)
-
-    try:
-        answers.index(True)
-    except ValueError:
-        return False
-
-    return True
-
-
-def setCursor(arrow):
-    hotspot = (0, 0)
-    s2 = []
-    for line in arrow:
-        s2.append(line.replace('x', 'X').replace(',', '.').replace('O', 'o'))
-    cursor, mask = pygame.cursors.compile(s2, 'X', '.', 'o')
-    size = len(arrow[0]), len(arrow)
-    pygame.mouse.set_cursor(size, hotspot, cursor, mask)
-
-
-def path_leaf(path):
-    head, tail = ntpath.split(path)
-    return tail or ntpath.basename(head)
-
-
-def readMouse(startTime, button, duration=None):
-    iKeyboard = Keyboard()
-    if duration is not None:
-        while int((get_time() - startTime) * 1000) <= duration:
-            alle = pygame.event.get()
-            rt = int((get_time() - startTime)*1000)
-            for e in alle:
-                if e.type == pygame.MOUSEBUTTONDOWN and e.button == button:
-                    return rt, coordinates2position(e.pos)
-
-            if iKeyboard.process_control_keys():
-                break
-
-        return None, None
-
-    else:
-        while True:
-            alle = pygame.event.get()
-            rt = int((get_time() - startTime)*1000)
-            for e in alle:
-                if e.type == pygame.MOUSEBUTTONDOWN and e.button == button:
-                    return rt, coordinates2position(e.pos)
-
-            if iKeyboard.process_control_keys():
-                break
-    #
-    # if nBlock < 0:  # if nBlock == 0:
-    #
-    #     ''' Presentation all locations + memorization'''
-    #
-    #     list = np.random.permutation(m.size[0] * m.size[1])
-    #     list = list.tolist()
-    #     list.remove((m.size[0]*m.size[1])/2)
-    #
-    #     for nCard in list:
-    #         isLearned = False
-    #
-    #         while not isLearned:
-    #             mouse.hide_cursor(True, True)
-    #             bs = m.plotCard(nCard,True,bs)  # Show Location for ( 2s )
-    #             bs.present(False, True)
-    #             exp.clock.wait(presentationCard)
-    #
-    #             bs = m.plotCard(nCard, False, bs)  # Hide Location
-    #             m._cueCard.setPicture(m._matrix.item(nCard).stimuli[0].filename)
-    #             bs = m.plotCueCard(True, bs)  # Show Cue
-    #             bs.present(False, True)  # Update Screen
-    #
-    #             exp.clock.wait(presentationCard)  # Wait
-    #
-    #             bs = m.plotCueCard(False, bs)  # Hide Cue
-    #             bs.present(False, True)  # Update Screen
-    #             mouse.show_cursor(True, True)  # Show cursor
-    #
-    #             position = None
-    #             [event_id, position, rt] = mouse.wait_press(buttons=None, duration=responseTime, wait_for_buttonup=True)
-    #
-    #             if position is not None:
-    #                 if m.checkPosition(position) == nCard:
-    #                     mouse.hide_cursor(True, True)
-    #                     isLearned = True
-    #
-    #             ISI = design.randomize.rand_int(min_max_ISI[0], min_max_ISI[1])
-    #             exp.clock.wait(ISI)
-
-
-class correctCards(object):
+class CorrectCards(object):
     def __init__(self):
-        self.name = []
-        self.position = []
-        self.animals = []
-        self.clothes = []
-        self.fruits = []
-        self.vehicules = []
-
-class wrongCards(object):
-    def __init__(self):
-        self.name = []
+        self.answer = []
         self.position = []
         self.picture = []
-        self.animals = []
-        self.clothes = []
-        self.fruits = []
-        self.vehicules = []
 
-def extractCorrectAnswers(iFolder, iFile):
-    #
-    #
-    #
-    agg = data_preprocessing.Aggregator(data_folder=iFolder,
-                                    file_name=iFile)
-    header = data_preprocessing.read_datafile(iFolder + iFile, only_header_and_variable_names=True)
-    header = header[3].split('\n#e ')
-    data = {}
-    for variable in agg.variables:
-        data[variable] = agg.get_variable_data(variable)
 
-    validCards = correctCards()
-    inValidCards = wrongCards()
+class WrongCards(object):
+    def __init__(self):
+        self.answer = []
+        self.position = []
+        self.picture = []
 
-    indexBlocks = np.unique(data['NBlock'])
 
-    for block in indexBlocks:
-        correctAnswers = np.logical_and(data['Picture']==data['Answers'], data['NBlock']==block)
-        wrongAnswers = np.logical_and(data['Picture']!=data['Answers'], data['NBlock']==block)
+class Day(object):
+    def __init__(self, recognition=False):
+        self.matrix = []
+        self.header = []
+        self.matrix_pictures = []
+        self.number_blocks = 0
+        self.matrix_size = ()
+        self.events = []
 
-    matrixPictures = ast.literal_eval(header[header.index('Positions pictures:')+1].split('\n')[0].split('\n')[0])
+        self.cards_order = []
+        if not recognition:
+            self.recognition = False
+            self.cards_distance_to_correct_card = []
+        else:
+            self.recognition = True
+            self.cards_answer = {}
+            self.recognition_cards_order = {}
+            self.recognition_answer = {}
 
-    for idx, val in enumerate(correctAnswers):
-        if val:
-            validCards.name.append(data['Answers'][idx][0])
-            validCards.position.append(matrixPictures.index(data['Answers'][idx]))
 
-    validCards.animals = [ word for word in validCards.name if word[0]=='a']
-    validCards.clothes = [ word for word in validCards.name if word[0]=='c']
-    validCards.vehicules = [ word for word in validCards.name if word[0]=='v']
-    validCards.fruits = [ word for word in validCards.name if word[0]=='f']
+def extract_matrix_and_data(i_folder, i_file, recognition=False):
+    header = data_preprocessing.read_datafile(i_folder + i_file, only_header_and_variable_names=True)
 
-    for idx, val in enumerate(wrongAnswers):
-        if val:
-            inValidCards.name.append(data['Answers'][idx][0])
-            inValidCards.picture.append(data['Picture'][idx][0])
-            if 'None' in data['Answers'][idx][0]:
-                inValidCards.position.append(100)
-            else:
-                inValidCards.position.append(matrixPictures.index(data['Answers'][idx]))
-
-    inValidCards.animals = [ word for word in inValidCards.name if word[0]=='a']
-    inValidCards.clothes = [ word for word in inValidCards.name if word[0]=='c']
-    inValidCards.vehicules = [ word for word in inValidCards.name if word[0]=='v']
-    inValidCards.fruits = [ word for word in inValidCards.name if word[0]=='f']
-
-    return data, validCards, inValidCards, matrixPictures
-
-def printErrors(currentDay, compareDay=''):
-    currentMatrix = ' (Matrix B) ; '
-    compareMatrix = ' (Matrix A) ; '
-    if 'Learning' in currentDay.name:
-        currentMatrix = ' (Matrix A) ; '
-        compareMatrix = ' (Matrix B) ; '
-
-    if not compareDay:
-        for idx, val in enumerate(currentDay.wrongCards.name):
-            if 'None' not in val:
-                print 'Asked: ' + currentDay.wrongCards.picture[idx] + ' , ' + str(currentDay.matrix.index(currentDay.wrongCards.picture[idx])) + ' ; Answer: ' + val + ' , ' +  str(currentDay.wrongCards.position[idx]) + ' (Matrix A) ; ' + str(distance.euclidean(np.unravel_index(currentDay.matrix.index(currentDay.wrongCards.picture[idx]), matrixSize), np.unravel_index(currentDay.wrongCards.position[idx],matrixSize)))
-            else:
-                print 'Asked: ' + currentDay.wrongCards.picture[idx] + ' , ' + str(currentDay.matrix.index(currentDay.wrongCards.picture[idx])) + ' ; No Answer'
+    # Extracting pictures' positions in the matrix
+    header2 = header[3].split('\n#e ')
+    if not recognition:
+        matrix_position = 'Positions pictures:'
+        recognition_matrix = False
     else:
-        for idx, val in enumerate(currentDay.wrongCards.name):
-            if 'None' not in val:
-                if compareDay.matrix.index(currentDay.wrongCards.picture[idx]) == currentDay.wrongCards.position[idx]: # Check if position of other Matrix is the same as testing
-                    print 'Asked: ' + currentDay.wrongCards.picture[idx] + ' , ' + str(currentDay.matrix.index(currentDay.wrongCards.picture[idx])) + ' ; Answer: ' + val + ' , ' + str(currentDay.wrongCards.position[idx]) + currentMatrix + compareDay.matrix[compareDay.matrix.index(currentDay.wrongCards.picture[idx])] + ' , ' + str(compareDay.matrix.index(currentDay.wrongCards.picture[idx])) + compareMatrix + str(distance.euclidean(np.unravel_index(currentDay.matrix.index(currentDay.wrongCards.picture[idx]), matrixSize) , np.unravel_index( currentDay.wrongCards.position[idx], matrixSize)))
-                else:
-                    print 'Asked: ' + currentDay.wrongCards.picture[idx] + ' , ' + str(currentDay.matrix.index(currentDay.wrongCards.picture[idx])) + ' ; Answer: ' + val + ' , ' + str(currentDay.wrongCards.position[idx]) + currentMatrix + str(distance.euclidean(np.unravel_index(currentDay.matrix.index(currentDay.wrongCards.picture[idx]), matrixSize) , np.unravel_index(currentDay.wrongCards.position[idx], matrixSize)))
+        matrix_position = 'Learning:'
+        recognition_matrix = ast.literal_eval(
+            header2[header2.index('RandomMatrix:') + 1].split('\n')[0].split('\n')[0])
+        recognition_matrix = [element.rstrip('.png') if element is not None else None for element in recognition_matrix]
+        cards_order = header2[header2.index('Presentation Order:') + 1:header2.index('Experiment: DayOne-Recognition')]
+        cards_order = ''.join(cards_order)
+        non_decimal = re.compile(r'[^\d.]+')
+        cards_order = non_decimal.sub('', cards_order)
+        cards_order = cards_order.split('.')
+        cards_order = [int(x) for x in cards_order[0:-1]]
+        matrix_rec_or_a = cards_order[len(cards_order)/2:]
+        presentation_order = cards_order[:len(cards_order)/2]
+
+    matrix_pictures = ast.literal_eval(
+        header2[header2.index(matrix_position) + 1].split('\n')[0].split('\n')[0])
+    matrix_pictures = [element.rstrip('.png') if element is not None else None for element in matrix_pictures]
+
+    # Extracting data
+    events = header[-1].split('\n')
+    events = [element.encode('ascii') for element in events]
+
+    if len(matrix_pictures) == 48:
+        matrix_size = (7, 7)
+    elif len(matrix_pictures) == 36:
+        matrix_size = (6, 6)
+    elif len(matrix_pictures) == 24:
+        matrix_size = (5, 5)
+    else:
+        raise ValueError('Matrix dimensions cannot be identified')
+
+    if recognition:
+        return events, matrix_pictures, matrix_size, recognition_matrix, matrix_rec_or_a, presentation_order
+    else:
+        return events, matrix_pictures, matrix_size
+
+
+def extract_events(events, matrix_size):
+    cards_position = []
+    cards_distance_to_correct_card = []
+    cards_order = []
+    for event in events:
+        if 'Block' in event and 'Test' in event:
+            cards_position.append({})
+            cards_distance_to_correct_card.append({})
+            cards_order.append({})
+            block_number = len(cards_position) - 1
+            register_on = True
+            order = 0
+        elif 'Block' in event and 'Presentation' in event:
+            register_on = False
+        elif 'ShowCueCard' in event and register_on:
+            card = re.search('(?<=card_)\w+', event).group(0)
+            position = cards_position[block_number][card] = re.search('pos_([0-9]+)_', event).group(1)
+            cards_order[block_number][card] = order
+            order += 1
+            cards_distance_to_correct_card[block_number][card] = 'NaN'
+        elif 'Response' in event and 'NoResponse' not in event and 'pos_None_ERROR' not in event and register_on:
+            response = re.search('(?<=card_)\w+', event).group(0)
+            if response == card:
+                cards_distance_to_correct_card[block_number][card] = 0
             else:
-                print 'Asked: ' + currentDay.wrongCards.picture[idx] + ' , ' + str(currentDay.matrix.index(currentDay.wrongCards.picture[idx])) + ' ; No Answer'
+                response_position = re.search('pos_([0-9]+)_', event).group(1)
+                cards_distance_to_correct_card[block_number][card] = distance.euclidean(
+                    np.unravel_index(int(position), matrix_size),
+                    np.unravel_index(int(response_position), matrix_size))
 
-def printBasicResults(currentDay):
-        print str(len(currentDay.name)) + ' Locations recovered'
-        print str(len(currentDay.animals)) + '/9 animals recovered'
-        print str(len(currentDay.clothes)) + '/9 clothes recovered'
-        print str(len(currentDay.vehicules)) + '/9 vehicules recovered'
-        print str(len(currentDay.fruits)) + '/9 fruits recovered'
+    return cards_order, cards_distance_to_correct_card, block_number+1
 
 
-def extractRecognitionAnswers(iFolder, iFile):
+def recognition_extract_events(events, matrix_pictures, recognition_matrix, matrix_rec_or_a, presentation_order,
+                               matrix_size):
+    experiment_started = 0
+    counter = 0
+    cards = np.sort(matrix_pictures)
+    cards_no_none = list(cards[1:])
+    recognition_distance_matrix_a = {}
+    recognition_cards_order = {}
+    cards_order = {}
+    for i in range(len(cards_no_none)*2):
+        if matrix_rec_or_a[i]:
+            recognition_cards_order[recognition_matrix[presentation_order[i]]] = i
+        else:
+            cards_order[matrix_pictures[presentation_order[i]]] = i
+
+    # Assigning cards_order
+    # cards_order = [presentation_order[i] for i in range(len(presentation_order)) if matrix_rec_or_a[i]]
+    # cards_order = {cards_no_none[i]: cards_order[i] for i in range(len(cards_order))}
+    # Assigning recognition_cards_order
+    # recognition_cards_order = [presentation_order[i] for i in range(len(presentation_order)) if not matrix_rec_or_a[i]]
+    # recognition_cards_order = {cards_no_none[i]: recognition_cards_order[i] for i in range(len(recognition_cards_order))}
+
     #
-    #
-    #
-    agg = data_preprocessing.Aggregator(data_folder=iFolder,
-                                    file_name=iFile)
-    header = data_preprocessing.read_datafile(iFolder + iFile, only_header_and_variable_names=True)
+    cards_position = {}
+    recognition_cards_position = {}
+    cards_answer = {}
+    recognition_answer = {}
+    for event in events:
+        if experiment_started:
+            if 'ShowCard' in event:
+                card = re.search('(?<=card_)\w+', event).group(0)
+                card = card.rstrip('.png')
+                card_position = re.search('pos_([0-9]+)_', event).group(1)
+
+                expected_card = recognition_matrix[presentation_order[counter]] if matrix_rec_or_a[counter]\
+                    else matrix_pictures[presentation_order[counter]]
+                if card != expected_card:
+                    if matrix_rec_or_a[counter]:
+                        recognition_answer[last_card] = 'noResponse'
+                    else:
+                        cards_answer[last_card] = 'noResponse'
+                    counter += 1
+
+                if matrix_rec_or_a[counter]:
+                    recognition_cards_position[card] = card_position
+                else:
+                    cards_position[card] = card_position
+
+                last_card = card
+            if 'HideCard' in event:
+                hidden_card = re.search('(?<=card_)\w+', event).group(0)
+                hidden_card_position = re.search('pos_([0-9]+)_', event).group(1)
+                if dont_suppress_card_double_checking and\
+                        (hidden_card != card or hidden_card_position != card_position):
+                    raise Exception("""It seems a card was not hidden after being shown. Something may be wrong with
+                    the .xpd files you're using as input. You may skip this double-checking by changing
+                    `dont_suppress_card_double_checking` to `False` in ld_utils.py if you know what you're doing""")
+            if 'Response' in event:
+                # response = re.search('(?<=Response_)\w+', event).group(0)
+                response = re.search('Response_([a-zA-Z]+)_', event).group(1)
+                # matrix_rec_or_a[counter] == 1 means a recognition picture was shown
+                # matrix_rec_or_a[counter] == 0 means a matrixA picture was shown
+                if not matrix_rec_or_a[counter] and response == 'MatrixA':
+                    cards_answer[card] = 1
+                elif not matrix_rec_or_a[counter] and response == 'None':
+                    cards_answer[card] = 0
+                elif matrix_rec_or_a[counter] and response == 'None':
+                    recognition_answer[card] = 1
+                elif matrix_rec_or_a[counter] and response == 'MatrixA':
+                    recognition_answer[card] = 0
+                counter += 1
+        if 'StartExp' in event:
+            experiment_started = 1
+
+    for card in cards_no_none:
+            recognition_distance_matrix_a[card] = distance.euclidean(
+                np.unravel_index(int(cards_position[card]), matrix_size),
+                np.unravel_index(int(recognition_cards_position[card]), matrix_size))
+    return cards_order, cards_answer, recognition_cards_order, recognition_answer, recognition_distance_matrix_a
+
+
+def write_csv(output_file, matrix_pictures,
+              days=[], number_blocks=0, cards_order=[], cards_distance_to_correct_card=[]):
+
+    i_csv = csv.writer(open(output_file, "wb"))
+
+    first_row = ['Item', 'Class']
+    if not days:
+        for i in range(number_blocks):
+            first_row.extend(
+                ['Day1_Block' + str(i) + '_matrixA_order', 'Day1_Block' + str(i) + '_matrixA_distanceToMatrixA'])
+    else:
+        first_row.extend(['Day1_matrixA_order', 'Day1_matrixA_distanceToMatrixA',
+                          'Day2_matrixA_order', 'Day2_matrixA_distanceToMatrixA',
+                          'DayRec_matrixA_order', 'DayRec_MatrixA_answer',
+                          'DayRec_matrixRec_order', 'DayRec_matrixRec_answer',
+                          'D3RecMR_distanceToMatrixA'])
+
+    i_csv.writerow(first_row)
+
+    if not days:
+        write_csv_learning(i_csv, matrix_pictures, cards_order, cards_distance_to_correct_card, number_blocks)
+    else:
+        write_csv_test(i_csv, matrix_pictures, days)
+
+
+def write_csv_learning(i_csv, matrix_pictures, cards_order, cards_distance_to_correct_card, number_blocks):
+    cards = [card for card in np.sort(matrix_pictures) if card is not None]
+    for card in cards:
+        # Add item; Add category
+        card = card.rstrip('.png')
+        item_list = [card, card[0]]
+        # add answers and card orders
+        for block_number in range(number_blocks):
+            try:
+                item_list.extend([cards_order[block_number][card], cards_distance_to_correct_card[block_number][card]])
+            except KeyError:
+                item_list.extend(['script_failed_extract_data', 'script_failed_extract_data'])
+        i_csv.writerow(item_list)
+
+
+def write_csv_test(i_csv, matrix_pictures, days):
+    cards = [card for card in np.sort(matrix_pictures) if card is not None]
+    for card in cards:
+        # Add item; Add category
+        card = card.rstrip('.png')
+        item_list = [card, card[0]]
+        for day in days:
+            try:
+                if not day.recognition:
+                    print day.cards_order
+                    print day.cards_distance_to_correct_card
+                    item_list.extend([day.cards_order[0][card], day.cards_distance_to_correct_card[0][card]])
+                else:
+                    item_list.extend([day.cards_order[card], day.cards_answer[card],
+                                      day.recognition_cards_order[card], day.recognition_answer[card],
+                                      day.cards_distance_to_correct_card[card]])
+            except KeyError:
+                if not day.recognition:
+                    item_list.extend(['script_failed_extract_data', 'script_failed_extract_data'])
+                else:
+                    item_list.extend(['script_failed_extract_data', 'script_failed_extract_data',
+                                      'script_failed_extract_data', 'script_failed_extract_data',
+                                      'script_failed_extract_data'])
+
+        i_csv.writerow(item_list)
+
+def extract_correct_answers(i_folder, i_file):
+    agg = data_preprocessing.Aggregator(data_folder=i_folder, file_name=i_file)
+    header = data_preprocessing.read_datafile(i_folder + i_file, only_header_and_variable_names=True)
+
+    # Extracting pictures' positions in the matrix
     header = header[3].split('\n#e ')
+    matrix_pictures = ast.literal_eval(header[header.index('Positions pictures:') + 1].split('\n')[0].split('\n')[0])
+    matrix_pictures = [element for element in matrix_pictures if element is not None]
 
-    pOrder = header[header.index('Presentation Order:')+1:header.index('Presentation Order:')+6]
-    pOrder = ''.join(pOrder)
-    non_decimal = re.compile(r'[^\d.]+')
-    pOrder = non_decimal.sub('', pOrder)
-    pOrder = pOrder.split('.')
-    pOrder = [int(x) for x in pOrder[0:-1]]
-
-    matrixA = ast.literal_eval(header[header.index('Learning:')+1].split('\n')[0].split('\n')[0])
-
+    # Extracting data
     data = {}
     for variable in agg.variables:
         data[variable] = agg.get_variable_data(variable)
 
-    validCards = correctCards()
-    inValidCards = wrongCards()
+    block_indexes = np.unique(data['NBlock'])
+    for block in block_indexes:
+        correct_answers = np.logical_and(data['Picture'] == data['Answers'], data['NBlock'] == block)
+        wrong_answers = np.logical_and(data['Picture'] != data['Answers'], data['NBlock'] == block)
 
-    aCorrect = np.logical_and(data['Matrix']=='MatrixA', data['CorrectAnswer']=='True')
-    aNotCorrect = np.logical_and(data['Matrix']=='MatrixA', data['CorrectAnswer']=='False')
+    # list(set(my_list)) is one of the smoothest way to eliminate duplicates
+    classes = list(set([element[0] for element in matrix_pictures if element is not None]))
+    classes = list(np.sort(classes))  # Order the classes
+    # classes = ['a', 'b', 'c']
+    # WARNING: BUG TO INVESTIGATE ######################################################################################
+    # DOCUMENTATION ON CLASSES SHOULD BE WRITTEN AT A DIFFERENT PLACE
 
-    rndCorrect = np.logical_and(data['Matrix']=='MatrixRandom', data['CorrectAnswer']=='True')
-    rndNotCorrect = np.logical_and(data['Matrix']=='MatrixRandom', data['CorrectAnswer']=='False')
+    valid_cards = CorrectCards()
+    invalid_cards = WrongCards()
+    for idx, val in enumerate(correct_answers):
+        if val:
+            valid_cards.answer.append(data['Answers'][idx][0])
+            valid_cards.position.append(matrix_pictures.index(data['Answers'][idx]))
 
-    for idx, val in enumerate(aCorrect):
-        if val[0]:
-            validCards.name.append(matrixA[pOrder[idx]])
-            validCards.position.append(pOrder[idx])
+    for idx, val in enumerate(wrong_answers):
+        if val:
+            invalid_cards.answer.append(data['Answers'][idx][0])
+            invalid_cards.picture.append(data['Picture'][idx][0])
+            if 'None' in data['Answers'][idx][0]:
+                invalid_cards.position.append(100)
+            else:
+                invalid_cards.position.append(matrix_pictures.index(data['Answers'][idx]))
 
-    for idx, val in enumerate(aNotCorrect):
-        if val[0]:
-            inValidCards.name.append(matrixA[pOrder[idx]])
-            inValidCards.position.append(pOrder[idx])
+    for idx, val in enumerate(wrong_answers):
+        if val:
+            invalid_cards.answer.append(data['Answers'][idx][0])
+            invalid_cards.picture.append(data['Picture'][idx][0])
+            if 'None' in data['Answers'][idx][0]:
+                invalid_cards.position.append(100)
+            else:
+                invalid_cards.position.append(matrix_pictures.index(data['Answers'][idx]))
 
-    validCards.animals = [ word for word in validCards.name if word[0]=='a']
-    validCards.clothes = [ word for word in validCards.name if word[0]=='c']
-    validCards.vehicules = [ word for word in validCards.name if word[0]=='v']
-    validCards.fruits = [ word for word in validCards.name if word[0]=='f']
+    for element in classes:
+        valid_cards.element = [word for word in valid_cards.answer if word[0] == element]
+        invalid_cards.element = [word for word in invalid_cards.picture if word[0] == element]
 
-    inValidCards.animals = [ word for word in inValidCards.name if word[0]=='a']
-    inValidCards.clothes = [ word for word in inValidCards.name if word[0]=='c']
-    inValidCards.vehicules = [ word for word in inValidCards.name if word[0]=='v']
-    inValidCards.fruits = [ word for word in inValidCards.name if word[0]=='f']
-
-    return data, validCards, inValidCards, matrixA
-
-
-
-
-
-
-
-
+    return matrix_pictures, data, valid_cards, invalid_cards, len(block_indexes)

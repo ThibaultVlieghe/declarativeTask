@@ -1,336 +1,86 @@
-from __future__ import division
-import sys
 import os
-import numpy as np
-from scipy.spatial import distance
+import sys
+
 from expyriment.misc import data_preprocessing
-from ld_utils import extractCorrectAnswers, printErrors, printBasicResults, extractRecognitionAnswers
-from ld_utils import correctCards, wrongCards
-from config import matrixSize
-subjectFolder = sys.argv[1]
-subjectFolder = os.getcwd() + os.path.sep  + subjectFolder + os.path.sep + 'Data' + os.path.sep
 
-verbose = True
+from ld_utils import Day, extract_matrix_and_data, extract_events, recognition_extract_events, write_csv
 
-allFiles = os.listdir(subjectFolder)
+# ***INSTRUCTIONS***
+# Please input the location of the subject folder containing the data you wish to convert to .csv format
+# e.g. You are in DeCoNap/ and you wish to convert data located in DeCoNap/data/subject_41/
+# Please input: python ld_analysis.py data/subject_41
 
+# Output csv file will be created in the folder containing the folder you specified (in this example, DeCoNap/data/)
+# and will have the same name as the directory you specified
+# In this example, Output will be:  <subject_41.csv> <DeCoNap/data/subject_41.csv>
+
+sep = os.path.sep
+#
+# Declaring <subject_folder> and <outputFile> variables, which are self-explanatory
+subject_location = sys.argv[1]
+if subject_location[-1] == sep:  # removing path separator if not present. e.g. <data/> to <data>
+    subject_location = subject_location[:-1]
+subject_folder = os.getcwd() + sep + subject_location + sep
+output_file_learning = os.getcwd() + sep + subject_location + '_learning.csv'
+output_file_tests = os.getcwd() + sep + subject_location + '_tests&recognition.csv'
+
+# Gathering all subject files
+allFiles = os.listdir(subject_folder)
 declarativeFiles = []
-
 for iFile in allFiles:
+    # There is only one recognition test (and therefore only one file) in our research paradigm
     if 'ld_recognition' in iFile:
         recognitionFile = iFile
     elif 'ld_declarativeTask' in iFile:
         declarativeFiles.append(iFile)
 
-
-class Days(object):
-
-    def __init__(self):
-        self.name = ''
-        self.header = ''
-        self.ifile = ''
-        self.data = []
-        self.correctCards = correctCards()
-        self.wrongCards = wrongCards()
-        self.matrix = []
-
-isInterference = False
-dayOneTestLearning = Days()
-dayTwoTestLearning = Days()
-dayThreeTestLearning = Days()
-dayTwoTestInterference = Days()
-dayThreeTestInterference = Days()
-dayThreeRecognition = Days()
-dayTwoInterference = Days()
-dayOneLearning = Days()
-
-testFiles = []
+day1_learning = Day()
+day2_test = Day()
+day3_test = Day()
+day3_recognition = Day(recognition=True)
 
 for iFile in allFiles:
-    header = data_preprocessing.read_datafile(subjectFolder + iFile, only_header_and_variable_names=True)
-    header = header[3].split('\n#e ')
+    header = data_preprocessing.read_datafile(subject_folder + iFile, only_header_and_variable_names=True)
+    header[3].split('\n#e ')
 
     for field in header:
+        if "DayOne-Learning" in field and "Experiment" in field:
+            events, matrix_pictures, matrix_size = extract_matrix_and_data(subject_folder, iFile)
+            day1_learning.cards_order, day1_learning.cards_distance_to_correct_card, day1_learning.number_blocks =\
+                extract_events(events, matrix_size)
+
+            write_csv(output_file_learning, matrix_pictures, number_blocks=day1_learning.number_blocks,
+                      cards_order=day1_learning.cards_order,
+                      cards_distance_to_correct_card=day1_learning.cards_distance_to_correct_card)
+            break
         if "DayOne-TestLearning" in field and "Experiment" in field:
-            print 'DayOne-TestLearning'
-            dayOneTestLearning.name = 'DayOne-TestLearning'
-            dayOneTestLearning.header = header
-            dayOneTestLearning.ifile = iFile
-            dayOneTestLearning.data, dayOneTestLearning.correctCards, dayOneTestLearning.wrongCards, dayOneTestLearning.matrix = extractCorrectAnswers(subjectFolder, iFile)
-            for nBlock in range(int(np.max(dayOneTestLearning.data['NBlock']))+1):
-                print 'Block: ' + str(nBlock)
-                print str(int(dayOneTestLearning.data['Time'][dayOneTestLearning.data['NBlock']==nBlock][-1]-dayOneTestLearning.data['Time'][dayOneTestLearning.data['NBlock']==nBlock][0])/60000) + ' min'
+            day2_test.events, day2_test.matrix_pictures, day2_test.matrix_size, =\
+                extract_matrix_and_data(subject_folder, iFile)
+            day2_test.cards_order, day2_test.cards_distance_to_correct_card, day2_test.number_blocks =\
+                extract_events(day2_test.events, day2_test.matrix_size)
             break
-        elif "DayTwo-TestLearning" in field and "Experiment" in field:
-            print 'DayTwo-TestLearning'
-            dayTwoTestLearning.name = 'DayTwo-TestLearning'
-            dayTwoTestLearning.header = header
-            dayTwoTestLearning.ifile = iFile
-            dayTwoTestLearning.data, dayTwoTestLearning.correctCards, dayTwoTestLearning.wrongCards, dayTwoTestLearning.matrix = extractCorrectAnswers(subjectFolder, iFile)
-            for nBlock in range(int(np.max(dayTwoTestLearning.data['NBlock']))+1):
-                print 'Block: ' + str(nBlock)
-                print str(int(dayTwoTestLearning.data['Time'][dayTwoTestLearning.data['NBlock']==nBlock][-1]-dayTwoTestLearning.data['Time'][dayTwoTestLearning.data['NBlock']==nBlock][0])/60000) + ' min'
+        if "DayOne-TestConsolidation" in field and "Experiment" in field:
+            day3_test.events, day3_test.matrix_pictures, day3_test.matrix_size = \
+                extract_matrix_and_data(subject_folder, iFile)
+            day3_test.cards_order, day3_test.cards_distance_to_correct_card, day3_test.number_blocks = \
+                extract_events(day3_test.events, day3_test.matrix_size)
             break
-        elif "DayThree-TestLearning" in field and "Experiment" in field:
-            print 'DayThree-TestLearning'
-            dayThreeTestLearning.name = 'DayThree-TestLearning'
-            dayThreeTestLearning.header = header
-            dayThreeTestLearning.ifile = iFile
-            dayThreeTestLearning.data, dayThreeTestLearning.correctCards, dayThreeTestLearning.wrongCards, dayThreeTestLearning.matrix = extractCorrectAnswers(subjectFolder, iFile)
-            for nBlock in range(int(np.max(dayThreeTestLearning.data['NBlock']))+1):
-                print 'Block: ' + str(nBlock)
-                print str(int(dayThreeTestLearning.data['Time'][dayThreeTestLearning.data['NBlock']==nBlock][-1]-dayThreeTestLearning.data['Time'][dayThreeTestLearning.data['NBlock']==nBlock][0])/60000) + ' min'
-            break
-        elif "DayTwo-TestInterference" in field and "Experiment" in field:
-            print 'DayTwo-TestInterference'
-            dayTwoTestInterference.name = 'DayTwo-TestInterference'
-            dayTwoTestInterference.header = header
-            dayTwoTestInterference.ifile = iFile
-            isInterference = True
-            dayTwoTestInterference.data, dayTwoTestInterference.correctCards, dayTwoTestInterference.wrongCards, dayTwoTestInterference.matrix = extractCorrectAnswers(subjectFolder, iFile)
-            for nBlock in range(int(np.max(dayTwoTestInterference.data['NBlock']))+1):
-                print 'Block: ' + str(nBlock)
-                print str(int(dayTwoTestInterference.data['Time'][dayTwoTestInterference.data['NBlock']==nBlock][-1]-dayTwoTestInterference.data['Time'][dayTwoTestInterference.data['NBlock']==nBlock][0])/60000) + ' min'
-            break
-        elif "DayThree-TestInterference" in field and "Experiment" in field:
-            print 'DayThree-TestInterference'
-            dayThreeTestInterference.name = 'DayThree-TestInterference'
-            dayThreeTestInterference.header = header
-            dayThreeTestInterference.ifile = iFile
-            dayThreeTestInterference.data, dayThreeTestInterference.correctCards, dayThreeTestInterference.wrongCards, dayThreeTestInterference.matrix = extractCorrectAnswers(subjectFolder, iFile)
-            for nBlock in range(int(np.max(dayThreeTestInterference.data['NBlock']))+1):
-                print 'Block: ' + str(nBlock)
-                print str(int(dayThreeTestInterference.data['Time'][dayThreeTestInterference.data['NBlock']==nBlock][-1]-dayThreeTestInterference.data['Time'][dayThreeTestInterference.data['NBlock']==nBlock][0])/60000) + ' min'
-            break
-        elif "recognition" in iFile:
-            print 'recognition'
-            dayThreeRecognition.name = 'recognition'
-            dayThreeRecognition.header = header
-            dayThreeRecognition.ifile = iFile
-            dayThreeRecognition.data, dayThreeRecognition.correctCards, dayThreeRecognition.wrongCards, dayThreeRecognition.matrix = extractRecognitionAnswers(subjectFolder, iFile)
-            break
-        elif "DayTwo-Interference" in field:
-            print 'DayTwo-Interference'
-            dayTwoInterference.name = 'DayTwo-Interference'
-            dayTwoInterference.header = header
-            dayTwoInterference.ifile = iFile
-            dayTwoInterference.data, dayTwoInterference.correctCards, dayTwoInterference.wrongCards, dayTwoInterference.matrix = extractCorrectAnswers(subjectFolder, iFile)
-            print dayTwoInterference.matrix[0][0] + ' ' + dayTwoInterference.matrix[1][0] + ' ' + dayTwoInterference.matrix[2][0] + ' ' + dayTwoInterference.matrix[6][0]
-            for nBlock in range(int(np.max(dayTwoInterference.data['NBlock']))+1):
-                print 'Block: ' + str(nBlock)
-                print str(int(dayTwoInterference.data['Time'][dayTwoInterference.data['NBlock']==nBlock][-1]-dayTwoInterference.data['Time'][dayTwoInterference.data['NBlock']==nBlock][0])/60000) + ' min'
-            break
-        elif "DayOne-Learning" in field:
-            print 'DayOne-Learning'
-            dayOneLearning.name = 'DayOne-Learning'
-            dayOneLearning.header = header
-            dayOneLearning.ifile = iFile
-            dayOneLearning.data, dayOneLearning.correctCards, dayOneLearning.wrongCards, dayOneLearning.matrix = extractCorrectAnswers(subjectFolder, iFile)
-            print dayOneLearning.matrix[0][0] + ' ' + dayOneLearning.matrix[1][0] + ' ' + dayOneLearning.matrix[2][0] + ' ' + dayOneLearning.matrix[6][0]
-            for nBlock in range(int(np.max(dayOneLearning.data['NBlock']))+1):
-                print 'Block: ' + str(nBlock)
-                print str(int(dayOneLearning.data['Time'][dayOneLearning.data['NBlock']==nBlock][-1]-dayOneLearning.data['Time'][dayOneLearning.data['NBlock']==nBlock][0])/60000) + ' min'
+        if "DayOne-Recognition" in field and "Experiment" in field:
+            day3_recognition.events, day3_recognition.matrix_pictures, day3_recognition.matrix_size,\
+                recognition_matrix, matrix_a_or_rec, presentation_order\
+                = extract_matrix_and_data(subject_folder, iFile, recognition=True)
+            day3_recognition.cards_order, day3_recognition.cards_answer,\
+                day3_recognition.recognition_cards_order, day3_recognition.recognition_answer,\
+                day3_recognition.cards_distance_to_correct_card\
+                = recognition_extract_events(day3_recognition.events, day3_recognition.matrix_pictures,
+                                             recognition_matrix, matrix_a_or_rec, presentation_order,
+                                             day3_recognition.matrix_size)
             break
 
+write_csv(output_file_tests, matrix_pictures, days=[day2_test, day3_test, day3_recognition])
 
-unionDayOneMatrixA = set(dayOneTestLearning.correctCards.name).intersection(dayOneLearning.correctCards.name)
-newDayOneMatrixA = set(dayOneTestLearning.correctCards.name).difference(dayOneLearning.correctCards.name)
-forgotDayOneMatrixA = set(dayOneLearning.correctCards.name).difference(dayOneTestLearning.correctCards.name)
-
-unionConsolidation =  set(dayOneTestLearning.correctCards.name).intersection(dayTwoTestLearning.correctCards.name)
-unionReConsolidation = set(dayTwoTestLearning.correctCards.name).intersection(dayThreeTestLearning.correctCards.name)
-
-newConsolidation = set(dayTwoTestLearning.correctCards.name).difference(dayOneTestLearning.correctCards.name)
-newReConsolidation = set(dayThreeTestLearning.correctCards.name).difference(dayTwoTestLearning.correctCards.name)
-
-forgotConsolidation = set(dayOneTestLearning.correctCards.name).difference(dayTwoTestLearning.correctCards.name)
-forgotReConsolidation = set(dayTwoTestLearning.correctCards.name).difference(dayThreeTestLearning.correctCards.name)
-
-#print dayThreeTestLearning.correctCards.name
-#print dayThreeTestLearning.wrongCards.name
-
-#print dayThreeRecognition.correctCards.name
-#print dayThreeRecognition.wrongCards.name
-
-
-recognitionRecalledFromDayTwo = set(dayThreeRecognition.correctCards.name).intersection(dayTwoTestLearning.correctCards.name)
-recognitionRecalledFromDayThree = set(dayThreeRecognition.correctCards.name).intersection(dayThreeTestLearning.correctCards.name)
-
-recognitionForgottenFromDayTwo = set(dayTwoTestLearning.correctCards.name).difference(dayThreeRecognition.correctCards.name)
-recognitionForgottenFromDayThree = set(dayThreeTestLearning.correctCards.name).difference(dayThreeRecognition.correctCards.name)
-
-recognitionNewFromDayTwo = set(dayThreeRecognition.correctCards.name).difference(dayTwoTestLearning.correctCards.name)
-recognitionNewFromDayThree = set(dayThreeRecognition.correctCards.name).difference(dayThreeTestLearning.correctCards.name)
-
-if verbose:
-
-    print '##################################'
-    print 'Day One - Matrix A - Last Block of training'
-    printBasicResults(dayOneLearning.correctCards)
-
-    print '##################################'
-    print 'Day One - Matrix A'
-    printBasicResults(dayOneTestLearning.correctCards)
-
-    print '##################################'
-    print 'Day Two - Matrix A'
-    printBasicResults(dayTwoTestLearning.correctCards)
-
-    print '##################################'
-    print 'Day Three - Matrix A'
-    printBasicResults(dayThreeTestLearning.correctCards)
-
-    print '##################################'
-    print 'Day Three - Recognition'
-    printBasicResults(dayThreeRecognition.correctCards)
-
-    print '##################################'
-    print 'Summary Day One vs Day One Last Block of Training - Matrix A'
-    print str(len(unionDayOneMatrixA)) + ' correctly recalled locations'
-
-    if not newDayOneMatrixA:
-        print '0 new location'
-    else:
-        print str(len(newDayOneMatrixA)) + ' new locations : ' + str(newDayOneMatrixA)
-
-    if not forgotDayOneMatrixA:
-        print '0 forgotten location'
-    else:
-        print str(len(forgotDayOneMatrixA)) + ' forgotten locations : ' + str(forgotDayOneMatrixA)
-
-    print '##################################'
-    print 'Summary Day Two vs Day One - Matrix A'
-    print str(len(unionConsolidation)) + ' correctly recalled locations'
-
-    if not newConsolidation:
-        print '0 new location'
-    else:
-        print str(len(newConsolidation)) + ' new locations'
-
-    if not forgotConsolidation:
-        print '0 forgotten location'
-    else:
-        print str(len(forgotConsolidation)) + ' forgotten locations : ' + str(forgotConsolidation)
-
-
-    print '##################################'
-    print 'Summary Day Three vs Day Two Matrix A'
-    print str(len(unionReConsolidation)) + ' correctly recalled locations'
-    if not newReConsolidation:
-        print '0 new location'
-    else:
-        print str(len(newReConsolidation)) + ' new locations : ' + str(newReConsolidation)
-
-    if not forgotReConsolidation:
-        print '0 forgotten location'
-    else:
-        print str(len(forgotReConsolidation)) + ' forgotten locations : ' + str(forgotReConsolidation)
-
-    print '##################################'
-    print 'Summary Day Three Recognition vs Day Two Matrix A'
-    print str(len(recognitionRecalledFromDayTwo)) + ' correctly recalled locations'
-    if not recognitionNewFromDayTwo:
-        print '0 new location'
-    else:
-        print str(len(recognitionNewFromDayTwo)) + ' new locations : ' + str(recognitionNewFromDayTwo)
-
-    if not recognitionForgottenFromDayTwo:
-        print '0 forgotten location'
-    else:
-        print str(len(recognitionForgottenFromDayTwo)) + ' forgotten locations : ' + str(recognitionForgottenFromDayTwo)
-
-    print '##################################'
-    print 'Summary Day Three Recognition vs Day Three Matrix A'
-    print str(len(recognitionRecalledFromDayThree)) + ' correctly recalled locations'
-    if not recognitionNewFromDayThree:
-        print '0 new location'
-    else:
-        print str(len(recognitionNewFromDayThree)) + ' new locations : ' + str(recognitionNewFromDayThree)
-
-    if not recognitionForgottenFromDayThree:
-        print '0 forgotten location'
-    else:
-        print str(len(recognitionForgottenFromDayThree)) + ' forgotten locations : ' + str(recognitionForgottenFromDayThree)
-
-    print '##################################'
-    print 'Check errors DayOne - Matrix A Last Block of training'
-    printErrors(dayOneLearning)
-
-    print '##################################'
-    print 'Check errors DayOne - Matrix A'
-    printErrors(dayOneTestLearning)
-
-    print '##################################'
-    print 'Check errors DayTwo-Matrix A'
-    printErrors(dayTwoTestLearning, dayOneTestLearning)
-    
-    if isInterference:
-
-        print '##################################'
-        print 'Day Two - Matrix B - Last Block of training'
-        printBasicResults(dayTwoInterference.correctCards)
-
-        print '##################################'
-        print 'Day Two - Matrix B'
-        printBasicResults(dayTwoTestInterference.correctCards)
-
-        print '##################################'
-        print 'Day Three - Matrix B'
-        printBasicResults(dayThreeTestInterference.correctCards)
-
-        unionDayTwoMatrixB = set(dayTwoTestInterference.correctCards.name).intersection(dayTwoInterference.correctCards.name)
-        newDayTwoMatrixB = set(dayTwoTestInterference.correctCards.name).difference(dayTwoInterference.correctCards.name)
-
-        unionConsolidationInterference =  set(dayTwoTestInterference.correctCards.name).intersection(dayThreeTestInterference.correctCards.name)
-        newConsolidationInterference = set(dayThreeTestInterference.correctCards.name).difference(dayTwoTestInterference.correctCards.name)
-
-        forgotDayTwoMatrixB = set(dayTwoInterference.correctCards.name).difference(dayTwoTestInterference.correctCards.name)
-        forgotDayThreeMatrixB = set(dayTwoTestInterference.correctCards.name).difference(dayThreeTestInterference.correctCards.name)
-
-        print '##################################'
-        print 'Summary Day Two vs Day Two Last Block of training - Matrix B'
-        print str(len(unionDayTwoMatrixB)) + ' correctly recalled locations'
-        if not newDayTwoMatrixB:
-            print '0 new location'
-        else:
-            print str(len(newDayTwoMatrixB)) + ' new locations : ' + str(newDayTwoMatrixB)
-
-        if not forgotDayTwoMatrixB:
-            print '0 forgotten location'
-        else:
-            print str(len(forgotDayTwoMatrixB)) + ' forgotten locations : ' + str(forgotDayTwoMatrixB)
-
-        print '##################################'
-        print 'Summary Day Three vs Day Two - Matrix B'
-        print str(len(unionConsolidationInterference)) + ' correctly recalled locations'
-        if not newReConsolidation:
-            print '0 new location'
-        else:
-            print str(len(newConsolidationInterference)) + ' new locations : ' + str(newConsolidationInterference)
-
-        if not forgotDayThreeMatrixB:
-            print '0 forgotten location'
-        else:
-            print str(len(forgotDayThreeMatrixB)) + ' forgotten locations : ' + str(forgotDayThreeMatrixB)
-
-        print '##################################'
-        print 'Check errors DayTwo Last Block of training - Matrix B'
-        printErrors(dayTwoInterference, dayOneTestLearning)
-
-        print '##################################'
-        print 'Check errors DayTwo-Matrix B'
-        printErrors(dayTwoTestInterference, dayOneTestLearning)
-
-        print '##################################'
-        print 'Check errors DayThree-Matrix A'
-        printErrors(dayThreeTestLearning, dayTwoTestInterference)
-
-        print '##################################'
-        print 'Check errors DayThree-Matrix B'
-        printErrors(dayThreeTestInterference, dayOneTestLearning)
-
-    else:
-        print '##################################'
-        print 'Check errors DayThree-Matrix A'
-        printErrors(dayThreeTestLearning, dayTwoTestLearning)
-	
+# as a rule of thumb, for 'DayRec_MatrixA_answer' and 'DayRec_matrixRec_answer', remember that
+# 0 means "the subject made a mistake"
+# 1 means "the subject got it right"
+# 1 in 'DayRec_matrixRec_answer' means the subject clicked "Wrong" when presented with the wrong position. And 0, that
+# they were mistaken

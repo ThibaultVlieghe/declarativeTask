@@ -9,7 +9,7 @@ from ld_utils import setCursor, getPreviousMatrix, newRandomPresentation, readMo
 from ttl_catch_keyboard import wait_for_ttl_keyboard
 from config import *
 
-from ld_calibrateSoundVolumeSubprocess import create_temp_sound_files, delete_temp_files
+from ld_sound import create_temp_sound_files, delete_temp_files
 
 if not windowMode:  # Check WindowMode and Resolution
     control.defaults.window_mode = windowMode
@@ -56,6 +56,10 @@ exp.add_experiment_info([soundsAllocation])
 soundsVolumeAdjustmentIndB = create_temp_sound_files(subjectName)
 exp.add_experiment_info(['Sounds Volume adjustment (in dB):'])
 exp.add_experiment_info([soundsVolumeAdjustmentIndB])
+if soundsVolumeAdjustmentIndB != [0, 0, 0]:
+    volumeAdjusted = True
+else:
+    volumeAdjusted = False
 
 exp.add_experiment_info(['Presentation Order: '])  # Save Presentation Order
 
@@ -158,7 +162,7 @@ for nCard in range(presentationOrder.shape[1]):
             break
     m.plotCard(locationCard, True, bs, True)
 
-    m.playSound(locationCard)
+    m.playSound(locationCard, volumeAdjusted=volumeAdjusted)
     cueSound = sounds[m._matrix.item(locationCard).sound]
     exp.add_experiment_info(['ShowCard_pos_{}_card_{}_timing_{}_sound_{}'.format(locationCard,
                                                                                  listCards[nCard],
