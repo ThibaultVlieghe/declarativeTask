@@ -1,11 +1,13 @@
 import csv
+from math import floor
 
 import numpy as np
 import ast
 import re
 from scipy.spatial import distance
-
 from expyriment.misc import data_preprocessing
+from config import removeCards, matrixSize
+
 
 dont_suppress_card_double_checking = True
 
@@ -89,17 +91,20 @@ def extract_matrix_and_data(i_folder, i_file, recognition=False):
 
 
 def extract_events(events, matrix_size):
-    cards_position = []
-    cards_distance_to_correct_card = []
-    cards_order = []
+    cards_position = []  # the position of the card in the matrix
+    cards_distance_to_correct_card = []  # the distance between the card clicked and the correct answer (0 if correct)
+    cards_order = []  # the order of presentation of the card in the test phase
     for event in events:
+        # we start collecting the answers
         if 'Block' in event and 'Test' in event:
+            # we add a dictionary for
             cards_position.append({})
             cards_distance_to_correct_card.append({})
             cards_order.append({})
             block_number = len(cards_position) - 1
             register_on = True
-            order = 0
+            order = 0  # we start a 0, first card/image presented during the test
+        # we stop collecting the answers, this is a presentation phase
         elif 'Block' in event and 'Presentation' in event:
             register_on = False
         elif 'ShowCueCard' in event and register_on:
@@ -126,11 +131,16 @@ def recognition_extract_events(events, matrix_pictures, recognition_matrix, matr
     experiment_started = 0
     counter = 0
     cards = np.sort(matrix_pictures)
-    cards_no_none = list(cards[1:])
+    # cards_no_none = list(cards[1:])
     recognition_distance_matrix_a = {}
     recognition_cards_order = {}
     cards_order = {}
-    for i in range(len(cards_no_none)*2):
+    # taking into account the center where there is no card:
+    if len(removeCards) == 1 and removeCards[0] == int(floor(matrixSize[0]*matrixSize[1]/2)):
+        for i in range(len(presentation_order)):
+            if presentation_order[i] > removeCards[0]:
+                presentation_order[i] = presentation_order[i] - 1
+    for i in range(len(cards)*2):
         if matrix_rec_or_a[i]:
             recognition_cards_order[recognition_matrix[presentation_order[i]]] = i
         else:
@@ -195,7 +205,7 @@ def recognition_extract_events(events, matrix_pictures, recognition_matrix, matr
         if 'StartExp' in event:
             experiment_started = 1
 
-    for card in cards_no_none:
+    for card in cards:
             recognition_distance_matrix_a[card] = distance.euclidean(
                 np.unravel_index(int(cards_position[card]), matrix_size),
                 np.unravel_index(int(recognition_cards_position[card]), matrix_size))
@@ -220,7 +230,6 @@ def write_csv(output_file, matrix_pictures,
                           'D3RecMR_distanceToMatrixA'])
 
     i_csv.writerow(first_row)
-
     if not days:
         write_csv_learning(i_csv, matrix_pictures, cards_order, cards_distance_to_correct_card, number_blocks)
     else:
@@ -251,8 +260,6 @@ def write_csv_test(i_csv, matrix_pictures, days):
         for day in days:
             try:
                 if not day.recognition:
-                    print day.cards_order
-                    print day.cards_distance_to_correct_card
                     item_list.extend([day.cards_order[0][card], day.cards_distance_to_correct_card[0][card]])
                 else:
                     item_list.extend([day.cards_order[card], day.cards_answer[card],
