@@ -297,9 +297,6 @@ def extract_correct_answers(i_folder, i_file):
     # list(set(my_list)) is one of the smoothest way to eliminate duplicates
     classes = list(set([element[0] for element in matrix_pictures if element is not None]))
     classes = list(np.sort(classes))  # Order the classes
-    # classes = ['a', 'b', 'c']
-    # WARNING: BUG TO INVESTIGATE ######################################################################################
-    # DOCUMENTATION ON CLASSES SHOULD BE WRITTEN AT A DIFFERENT PLACE
 
     valid_cards = CorrectCards()
     invalid_cards = WrongCards()
