@@ -34,11 +34,11 @@ def present_options(j):
     elif j > 3:
         print "here is the " + str(j) + "th sound"
 
-    print "press a to increase the volume, or d to decrease"
+    print "left click to increase the volume, or right click to decrease"
     print "You may not increase the sound over 0dB"
     print "if the sound is not high enough, please ask the supervisor to increase system volume"
     print "press q to move onto the next sound"
-    print "press any other key to hear the sound again"
+    print "press w to hear the sound again"
 
 
 def delete_temp_files():

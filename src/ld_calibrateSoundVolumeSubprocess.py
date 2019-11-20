@@ -1,4 +1,5 @@
 import keyboard
+import mouse
 import sys
 from ld_sound import *
 
@@ -8,18 +9,29 @@ soundsVolumeAdjustmentIndB = [0] * len(sounds)
 
 for i in range(len(sounds)):
     dontMoveOn = True
+    firstPresentation = True
     while dontMoveOn:
-        present_options(i)
-        change_volume(i, volume_adjustment_db=soundsVolumeAdjustmentIndB[i])
-        print "it is now " + str(soundsVolumeAdjustmentIndB) + " dB"
-        play_sound(i)
-        key = keyboard.read_key()
-        if key == 'a' and soundsVolumeAdjustmentIndB[i] + 5 <= 0:
-            soundsVolumeAdjustmentIndB[i] += 5
-        elif key == 'd':
-            soundsVolumeAdjustmentIndB[i] -= 5
-        elif key == 'q':
-            dontMoveOn = False
+        if firstPresentation:
+            firstPresentation = False
+            event_happened = True
+        else:
+            event_happened = False  # True if the user has pressed a key or clicked the mouse
+            if mouse.is_pressed(button='left'):
+                event_happened = True
+                if soundsVolumeAdjustmentIndB[i] + 5 <= 0:
+                    soundsVolumeAdjustmentIndB[i] += 5
+            elif mouse.is_pressed(button='right'):
+                event_happened = True
+                soundsVolumeAdjustmentIndB[i] -= 5
+            elif keyboard.is_pressed('q'):
+                dontMoveOn = False
+            elif keyboard.is_pressed('w'):
+                event_happened = True
+        if event_happened:
+            print "it is now " + str(soundsVolumeAdjustmentIndB) + " dB"
+            change_volume(i, volume_adjustment_db=soundsVolumeAdjustmentIndB[i])
+            play_sound(i)
+            present_options(i)
 
 delete_temp_files()
 
