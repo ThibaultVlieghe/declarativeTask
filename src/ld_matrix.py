@@ -127,7 +127,6 @@ class LdMatrix(object):
         else:
             command = 'ffplay -nodisp -loglevel quiet -autoexit ' + soundsFolder + \
                       sounds[self._cueCard.sound]
-            playsound(soundsFolder + sounds[self._cueCard.sound])
             subprocess.call(command)
 
     def plotDefault(self, bs, draw=False):
@@ -181,7 +180,7 @@ class LdMatrix(object):
 
         return newMatrix
 
-    def associatePictures(self, newMatrix):
+    def associatePictures(self, newMatrix, picturesFolder):
         nPict = 0
         for nCard in range(self._matrix.size):
             if nCard not in removeCards:

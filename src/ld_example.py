@@ -7,6 +7,7 @@ from expyriment.misc._timer import get_time
 
 from ld_matrix import LdMatrix
 from ld_utils import setCursor, newRandomPresentation, readMouse, path_leaf
+from ttl_catch_keyboard import wait_for_ttl_keyboard
 from config import *
 
 if not windowMode:  # Check WindowMode and Resolution
@@ -57,6 +58,8 @@ bs = stimuli.BlankScreen(bgColor)  # Create blank screen
 m.plotDefault(bs, True)  # Draw default grid
 
 exp.clock.wait(shortRest)
+
+wait_for_ttl_keyboard()
 
 exp.add_experiment_info(['Block {} - Presentation'.format(0)])  # Add listPictures
 exp.add_experiment_info(presentationOrder)  # Add listPictures

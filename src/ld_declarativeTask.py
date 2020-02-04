@@ -37,10 +37,15 @@ else:
     arguments = str(''.join(sys.argv[1:])).split(',')  # Get arguments - experiment name and subject
     experimentName = arguments[0]
     subjectName = arguments[1]
-    suffix = None
+    if experimentName == 'DayOne-PreLearning':
+        suffix = subjectName + '_PreLearning'
+        picturesFolder = rawFolder + 'stimulis' + os.path.sep + 'PreLearning_stimulis' + os.path.sep
+    else:
+        suffix = None
     firstTime = int(time()*1000)
 
 exp = design.Experiment(experimentName, filename_suffix=suffix)  # Save experiment name
+
 exp.add_experiment_info(['Subject: '])  # Save Subject Code
 exp.add_experiment_info([subjectName])  # Save Subject Code
 
@@ -66,6 +71,11 @@ elif experimentName == 'DayOne-TestConsolidation':
     keepMatrix = True
     keepSoundsAllocation = True
     nbBlocksMax = 1
+elif experimentName == 'DayOne-PreLearning':
+    oldListPictures = None
+    keepSoundsAllocation = True
+    keepMatrix = True
+    nbBlocksMax = 1
 
 if oldListPictures is False:
     print FAIL + "Warning: no old list of pictures found" + ENDC
@@ -77,7 +87,7 @@ exp.add_experiment_info(['Positions pictures:'])
 
 control.initialize(exp)
 
-m.associatePictures(newMatrix)  # Associate Pictures to cards
+m.associatePictures(newMatrix, picturesFolder)  # Associate Pictures to cards
 
 exp.add_experiment_info([m.listPictures])  # Add listPictures
 
@@ -135,7 +145,7 @@ while currentCorrectAnswers < correctAnswersMax and nBlock < nbBlocksMax:
             wait_for_ttl_keyboard()
     else:
         wait_for_ttl_keyboard()
-    if 1 != nbBlocksMax:
+    if 1 != nbBlocksMax or experimentName == 'DayOne-PreLearning':
         exp.add_experiment_info(['Block {} - Presentation'.format(nBlock)])  # Add listPictures
         exp.add_experiment_info(presentationOrder)  # Add listPictures
         instructions = stimuli.TextLine(' PRESENTATION ',
