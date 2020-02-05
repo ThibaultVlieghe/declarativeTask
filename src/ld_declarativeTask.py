@@ -298,7 +298,7 @@ while currentCorrectAnswers < correctAnswersMax and nBlock < nbBlocksMax:
     currentCorrectAnswers = correctAnswers[nBlock]  # Number of correct answers
 
     #if currentCorrectAnswers < correctAnswersMax and nBlock + 1 < nbBlocksMax:
-    if nbBlocksMax != 1:
+    if nbBlocksMax != 1 or experimentName == 'DayOne-PreLearning':
 
         instructions = stimuli.TextLine('You got ' + str(int(correctAnswers[nBlock])) + ' out of ' + str(m._matrix.size-len(removeCards)),
                                         position=(0, -windowSize[1]/float(2) + (2*m.gap + cardSize[1])/float(2)),
